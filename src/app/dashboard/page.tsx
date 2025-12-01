@@ -14,7 +14,7 @@ import { getUserWithChurch, isDemoSession, createServerSupabaseClient } from '@/
 
 async function getDashboardData(churchId: string) {
   // Fallback demo imediato
-  if (isDemoSession()) {
+  if (await isDemoSession()) {
     const demoIncome = 8500
     const demoExpense = 3200
     const demoBalance = 15750.5
@@ -175,6 +175,7 @@ async function getDashboardData(churchId: string) {
       membersCount: membersCount || 0,
       chartData,
       recentTransactions: recentTransactionsWithMember,
+      yearBalance,
     }
   } catch (err) {
     // Fallback demo em caso de erro de rede/Supabase

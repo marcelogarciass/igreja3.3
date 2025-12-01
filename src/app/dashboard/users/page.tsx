@@ -8,13 +8,13 @@ import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 async function getUsersList(churchId: string) {
-  if (isDemoSession()) {
+  if (await isDemoSession()) {
     const base = [
       { id: 'u-001', name: 'Administrador Demo', email: 'admin@demo.com', role: 'admin' },
       { id: 'u-002', name: 'Tesoureiro Demo', email: 'tesoureiro@demo.com', role: 'treasurer' },
       { id: 'u-003', name: 'Membro Demo', email: 'membro@demo.com', role: 'member' },
     ]
-    const c = cookies()
+    const c = await cookies()
     const addedRaw = c.get('demo_users_plus')?.value
     let added: any[] = []
     try { added = addedRaw ? JSON.parse(addedRaw) : [] } catch {}
@@ -47,8 +47,8 @@ export async function createUser(formData: FormData) {
   const email = (formData.get('email') as string) || ''
   const role = (formData.get('role') as string) || 'member'
 
-  if (isDemoSession()) {
-    const c = cookies()
+  if (await isDemoSession()) {
+    const c = await cookies()
     const addedRaw = c.get('demo_users_plus')?.value
     let added: any[] = []
     try { added = addedRaw ? JSON.parse(addedRaw) : [] } catch {}
@@ -119,7 +119,7 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
   }
 
   const users = await getUsersList(userData.church_id)
-  const demo = isDemoSession()
+  const demo = await isDemoSession()
   const saved = searchParams?.saved
   const errorCode = searchParams?.error
 

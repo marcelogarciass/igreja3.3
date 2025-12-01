@@ -19,7 +19,7 @@ export async function createQuickTransaction(formData: FormData) {
   const date = (formData.get('date') as string) || new Date().toISOString().slice(0, 10)
   const description = (formData.get('description') as string) || ''
 
-  if (isDemoSession()) {
+  if (await isDemoSession()) {
     // Em modo demo, não persiste, mas sinaliza sucesso e retorna ao dashboard
     redirect('/dashboard?demo_saved=1')
   }
@@ -64,7 +64,7 @@ export default async function QuickEntryPage() {
     redirect('/login')
   }
 
-  const demo = isDemoSession()
+  const demo = await isDemoSession()
 
   return (
     <div className="p-6 space-y-6">

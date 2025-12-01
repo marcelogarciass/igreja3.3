@@ -9,11 +9,13 @@ interface StatsCardProps {
     value: number
     isPositive: boolean
   }
+  // allow passing extra styling to the wrapper Card
+  className?: string
 }
 
-export function StatsCard({ title, value, icon: Icon, trend }: StatsCardProps) {
+export function StatsCard({ title, value, icon: Icon, trend, className }: StatsCardProps) {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}

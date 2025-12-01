@@ -1,52 +1,45 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Save, Settings } from 'lucide-react'
 import { getUserWithChurch, isDemoSession, createServerSupabaseClient } from '@/lib/auth'
-import { Settings, Palette, Save } from 'lucide-react'
 import { redirect } from 'next/navigation'
-import LogoUpload from '@/components/dashboard/logo-upload'
 
-async function updateChurchSettings(formData: FormData) {
+export async function updateChurchSettings(formData: FormData) {
   'use server'
-  
+
   const userData = await getUserWithChurch()
-  
-  if (!userData || userData.role !== 'admin') {
-    redirect('/dashboard')
+  if (!userData) {
+    redirect('/login')
   }
 
-  // Em modo demonstração, não persistimos alterações
-  if (isDemoSession()) {
-    redirect('/dashboard/settings?success=true')
+  if (await isDemoSession()) {
+    redirect('/dashboard/settings?success=1')
   }
+
+  const name = (formData.get('name') as string) || ''
+  const address = (formData.get('address') as string) || ''
+  const phone = (formData.get('phone') as string) || ''
+  const email = (formData.get('email') as string) || ''
+  const primary_color = (formData.get('primary_color') as string) || ''
+  const secondary_color = (formData.get('secondary_color') as string) || ''
 
   const supabase = await createServerSupabaseClient()
-
-  const name = formData.get('name') as string
-  const address = formData.get('address') as string
-  const phone = formData.get('phone') as string
-  const email = formData.get('email') as string
-  const primaryColor = formData.get('primaryColor') as string
-  const secondaryColor = formData.get('secondaryColor') as string
+  if (!supabase) {
+    redirect('/dashboard/settings?success=1')
+  }
 
   const { error } = await supabase
     .from('churches')
-    .update({
-      name,
-      address,
-      phone,
-      email,
-      primary_color: primaryColor,
-      secondary_color: secondaryColor,
-      updated_at: new Date().toISOString()
-    })
+    .update({ name, address, phone, email, primary_color, secondary_color })
     .eq('id', userData.church_id)
 
   if (error) {
-    console.error('Erro ao atualizar configurações:', error)
+    console.error('Erro ao atualizar igreja:', error)
+    redirect('/dashboard/settings?error=db')
   }
 
-  redirect('/dashboard/settings?success=true')
+  redirect('/dashboard/settings?success=1')
 }
 
 export default async function SettingsPage({
@@ -109,175 +102,47 @@ export default async function SettingsPage({
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Nome da Igreja
                 </label>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  defaultValue={church?.name || ''}
-                  required
-                  placeholder="Nome da sua igreja"
-                />
+                <Input id="name" name="name" defaultValue={church?.name} required />
               </div>
 
               <div>
                 <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                   Endereço
                 </label>
-                <Input
-                  id="address"
-                  name="address"
-                  type="text"
-                  defaultValue={church?.address || ''}
-                  placeholder="Endereço completo"
-                />
+                <Input id="address" name="address" defaultValue={church?.address ?? ''} />
               </div>
 
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                   Telefone
                 </label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  defaultValue={church?.phone || ''}
-                  placeholder="(11) 99999-9999"
-                />
+                <Input id="phone" name="phone" defaultValue={church?.phone ?? ''} />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   E-mail
                 </label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  defaultValue={church?.email || ''}
-                  placeholder="contato@igreja.com"
-                />
+                <Input id="email" name="email" defaultValue={church?.email ?? ''} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="primary_color" className="block text-sm font-medium text-gray-700 mb-1">
                     Cor Primária
                   </label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="primaryColor"
-                      name="primaryColor"
-                      type="color"
-                      defaultValue={church?.primary_color || '#3B82F6'}
-                      className="w-16 h-10 p-1 border rounded"
-                    />
-                    <Input
-                      type="text"
-                      defaultValue={church?.primary_color || '#3B82F6'}
-                      className="flex-1"
-                      placeholder="#3B82F6"
-                    />
-                  </div>
+                  <Input id="primary_color" name="primary_color" defaultValue={church?.primary_color ?? '#3B82F6'} />
                 </div>
-
                 <div>
-                  <label htmlFor="secondaryColor" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="secondary_color" className="block text-sm font-medium text-gray-700 mb-1">
                     Cor Secundária
                   </label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="secondaryColor"
-                      name="secondaryColor"
-                      type="color"
-                      defaultValue={church?.secondary_color || '#10B981'}
-                      className="w-16 h-10 p-1 border rounded"
-                    />
-                    <Input
-                      type="text"
-                      defaultValue={church?.secondary_color || '#10B981'}
-                      className="flex-1"
-                      placeholder="#10B981"
-                    />
-                  </div>
+                  <Input id="secondary_color" name="secondary_color" defaultValue={church?.secondary_color ?? '#10B981'} />
                 </div>
               </div>
 
-              <Button type="submit" className="w-full">
-                <Save className="h-4 w-4 mr-2" />
-                Salvar Configurações
-              </Button>
+              <Button type="submit">Salvar Alterações</Button>
             </form>
-          </CardContent>
-        </Card>
-
-        {/* Visual Customization */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
-              Personalização Visual
-            </CardTitle>
-            <CardDescription>
-              Customize a aparência do sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Logo Upload */}
-            <LogoUpload />
-
-            {/* Color Preview */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Prévia das Cores
-              </label>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-8 h-8 rounded border"
-                    style={{ backgroundColor: church?.primary_color || '#3B82F6' }}
-                  ></div>
-                  <span className="text-sm text-gray-600">Cor Primária</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-8 h-8 rounded border"
-                    style={{ backgroundColor: church?.secondary_color || '#10B981' }}
-                  ></div>
-                  <span className="text-sm text-gray-600">Cor Secundária</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Theme Preview */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Prévia do Tema
-              </label>
-              <div className="border rounded-lg p-4 bg-gray-50">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-900">Dashboard</h3>
-                  <div 
-                    className="px-3 py-1 rounded text-white text-sm"
-                    style={{ backgroundColor: church?.primary_color || '#3B82F6' }}
-                  >
-                    Botão Primário
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white p-3 rounded border">
-                    <div className="h-2 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-2 bg-gray-100 rounded"></div>
-                  </div>
-                  <div className="bg-white p-3 rounded border">
-                    <div 
-                      className="h-2 rounded mb-2"
-                      style={{ backgroundColor: church?.secondary_color || '#10B981' }}
-                    ></div>
-                    <div className="h-2 bg-gray-100 rounded"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation'
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 async function getTransactions(churchId: string) {
-  if (isDemoSession()) {
+  if (await isDemoSession()) {
     return [
       { id: 't-001', type: 'income', category: 'Dízimo', amount: 1500.0, description: 'Dízimo do mês de Janeiro', date: '2024-01-15' },
       { id: 't-002', type: 'income', category: 'Oferta', amount: 800.0, description: 'Oferta especial para reforma', date: '2024-01-20' },
