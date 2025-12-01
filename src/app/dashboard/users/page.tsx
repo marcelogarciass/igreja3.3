@@ -46,6 +46,8 @@ export async function createUser(formData: FormData) {
   const name = (formData.get('name') as string) || ''
   const email = (formData.get('email') as string) || ''
   const role = (formData.get('role') as string) || 'member'
+  const password = (formData.get('password') as string) || ''
+  const confirmPassword = (formData.get('confirm_password') as string) || ''
 
   if (await isDemoSession()) {
     const c = await cookies()
@@ -55,6 +57,14 @@ export async function createUser(formData: FormData) {
     added.push({ id: `demo-${Date.now()}`, name, email, role })
     c.set('demo_users_plus', JSON.stringify(added), { path: '/' })
     redirect('/dashboard/users?saved=1')
+  }
+
+  // Validações básicas de senha
+  if (!password || password.length < 6) {
+    redirect('/dashboard/users?error=password_length')
+  }
+  if (password !== confirmPassword) {
+    redirect('/dashboard/users?error=password_mismatch')
   }
 
   try {
@@ -77,16 +87,22 @@ export async function createUser(formData: FormData) {
       redirect('/dashboard/users?error=duplicate')
     }
 
-    // Convida o usuário por e-mail (Supabase envia e-mail para definir senha)
-    const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email)
-    if (inviteError) {
-      console.error('Erro ao convidar usuário pelo e-mail:', inviteError)
-      redirect('/dashboard/users?error=invite')
+    // Cria usuário diretamente no Auth com senha
+    const { data: created, error: createError } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { name, role },
+    })
+
+    if (createError) {
+      console.error('Erro ao criar usuário no Auth:', createError)
+      redirect('/dashboard/users?error=auth_create')
     }
 
-    const authUserId = inviteData?.user?.id
+    const authUserId = created?.user?.id
     if (!authUserId) {
-      console.error('ID do usuário Auth ausente após convite.')
+      console.error('ID do usuário Auth ausente após criação.')
       redirect('/dashboard/users?error=auth_id')
     }
 
@@ -126,9 +142,12 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
   const errorMessages: Record<string, string> = {
     duplicate: 'Este e-mail já está cadastrado para sua igreja.',
     invite: 'Falha ao enviar convite por e-mail. Verifique o SMTP do projeto.',
-    auth_id: 'Não foi possível obter o ID do usuário Auth após o convite.',
+    auth_id: 'Não foi possível obter o ID do usuário Auth.',
+    auth_create: 'Erro ao criar usuário no Auth.',
     db: 'Erro ao salvar o usuário na tabela users.',
     db_check: 'Erro ao checar duplicidade no banco.',
+    password_length: 'A senha deve ter pelo menos 6 caracteres.',
+    password_mismatch: 'As senhas não coincidem.',
     server: 'Erro inesperado no servidor durante a criação do usuário.',
   }
 
@@ -144,7 +163,7 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
 
       {saved && (
         <div className="rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-900">
-          Usuário convidado e criado com sucesso.
+          Usuário criado com sucesso e senha definida.
         </div>
       )}
 
@@ -162,7 +181,7 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
         <CardContent>
           {!demo && (
             <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-900 mb-3">
-              Para produção, convide usuários via Supabase Auth. A criação automática requer a chave de serviço.
+              Para produção, é necessário a chave de serviço para criar usuários com senha.
             </div>
           )}
           <form action={createUser} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,11 +195,20 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Papel</label>
-              <select name="role" className="border rounded-md p-2">
-                <option value="admin">Administrador</option>
-                <option value="treasurer">Tesoureiro</option>
+              <select name="role" defaultValue="member" className="border rounded-md p-2">
                 <option value="member">Membro</option>
+                <option value="treasurer">Tesoureiro</option>
+                <option value="admin">Administrador</option>
               </select>
+            </div>
+            {/* Senha */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Senha</label>
+              <Input name="password" type="password" placeholder="Defina uma senha" required />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Confirmar Senha</label>
+              <Input name="confirm_password" type="password" placeholder="Repita a senha" required />
             </div>
             <div className="md:col-span-2">
               <Button type="submit">

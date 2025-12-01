@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input'
 import { Save, Settings } from 'lucide-react'
 import { getUserWithChurch, isDemoSession, createServerSupabaseClient } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import LogoUpload from '@/components/dashboard/logo-upload'
+import ColorField from '@/components/dashboard/color-field'
 
 export async function updateChurchSettings(formData: FormData) {
   'use server'
@@ -84,7 +86,7 @@ export default async function SettingsPage({
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <form action={updateChurchSettings} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Church Information */}
         <Card>
           <CardHeader>
@@ -97,7 +99,7 @@ export default async function SettingsPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={updateChurchSettings} className="space-y-4">
+            <div className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Nome da Igreja
@@ -126,26 +128,44 @@ export default async function SettingsPage({
                 <Input id="email" name="email" defaultValue={church?.email ?? ''} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="primary_color" className="block text-sm font-medium text-gray-700 mb-1">
-                    Cor Primária
-                  </label>
-                  <Input id="primary_color" name="primary_color" defaultValue={church?.primary_color ?? '#3B82F6'} />
-                </div>
-                <div>
-                  <label htmlFor="secondary_color" className="block text-sm font-medium text-gray-700 mb-1">
-                    Cor Secundária
-                  </label>
-                  <Input id="secondary_color" name="secondary_color" defaultValue={church?.secondary_color ?? '#10B981'} />
-                </div>
-              </div>
-
               <Button type="submit">Salvar Alterações</Button>
-            </form>
+            </div>
           </CardContent>
         </Card>
-      </div>
+
+        {/* Visual Customization */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Personalização Visual
+            </CardTitle>
+            <CardDescription>
+              Logo e cores do tema da sua igreja
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <LogoUpload />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ColorField
+                  id="primary_color"
+                  name="primary_color"
+                  label="Cor Primária"
+                  defaultValue={church?.primary_color ?? '#3B82F6'}
+                />
+                <ColorField
+                  id="secondary_color"
+                  name="secondary_color"
+                  label="Cor Secundária"
+                  defaultValue={church?.secondary_color ?? '#10B981'}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </form>
     </div>
   )
 }
