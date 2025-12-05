@@ -15,12 +15,29 @@ export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
 
+  async function canReachSupabaseHost() {
+    try {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+      if (!url) return false
+      await fetch(url, { method: 'HEAD', mode: 'no-cors' })
+      return true
+    } catch {
+      return false
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     try {
+      const reachable = await canReachSupabaseHost()
+      if (!reachable) {
+        setError('Falha de rede ao conectar ao Supabase. Verifique a URL em .env.local e sua conexão.')
+        setLoading(false)
+        return
+      }
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -35,7 +52,11 @@ export default function LoginPage() {
         router.push('/dashboard')
       }
     } catch (err) {
-      setError('Falha de rede ao conectar ao Supabase. Tente novamente em instantes.')
+      if (err instanceof TypeError) {
+        setError('Falha de rede ao conectar ao Supabase. Tente novamente em instantes.')
+      } else {
+        setError('Erro inesperado. Tente novamente.')
+      }
     } finally {
       setLoading(false)
     }

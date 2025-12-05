@@ -20,6 +20,17 @@ export default function RegisterPage() {
   const router = useRouter()
   const supabase = createClient()
 
+  async function canReachSupabaseHost() {
+    try {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+      if (!url) return false
+      await fetch(url, { method: 'HEAD', mode: 'no-cors' })
+      return true
+    } catch {
+      return false
+    }
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -45,6 +56,12 @@ export default function RegisterPage() {
     }
 
     try {
+      const reachable = await canReachSupabaseHost()
+      if (!reachable) {
+        setError('Falha de rede ao conectar ao Supabase. Verifique a URL em .env.local e sua conexão.')
+        setLoading(false)
+        return
+      }
       // 1. Create user account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -90,7 +107,11 @@ export default function RegisterPage() {
         router.push('/dashboard')
       }
     } catch (err) {
-      setError('Erro inesperado. Tente novamente.')
+      if (err instanceof TypeError) {
+        setError('Falha de rede ao conectar ao Supabase. Tente novamente em instantes.')
+      } else {
+        setError('Erro inesperado. Tente novamente.')
+      }
     } finally {
       setLoading(false)
     }
