@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   async function canReachSupabaseHost() {
     try {
@@ -32,6 +31,7 @@ export default function LoginPage() {
     setError('')
 
     try {
+      const supabase = createClient()
       const reachable = await canReachSupabaseHost()
       if (!reachable) {
         setError('Falha de rede ao conectar ao Supabase. Verifique a URL em .env.local e sua conexão.')

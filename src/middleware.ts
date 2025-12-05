@@ -1,7 +1,16 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from './lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) {
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
+      },
+    })
+  }
   const { supabase, response } = createClient(request)
 
   // Refresh session if expired - required for Server Components
