@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Save, Settings } from 'lucide-react'
-import { getUserWithChurch, isDemoSession, createServerSupabaseClient } from '@/lib/auth'
+import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import LogoUpload from '@/components/dashboard/logo-upload'
 import ColorField from '@/components/dashboard/color-field'
@@ -15,10 +15,6 @@ export async function updateChurchSettings(formData: FormData) {
     redirect('/login')
   }
 
-  if (await isDemoSession()) {
-    redirect('/dashboard/settings?success=1')
-  }
-
   const name = (formData.get('name') as string) || ''
   const address = (formData.get('address') as string) || ''
   const phone = (formData.get('phone') as string) || ''
@@ -27,9 +23,6 @@ export async function updateChurchSettings(formData: FormData) {
   const secondary_color = (formData.get('secondary_color') as string) || ''
 
   const supabase = await createServerSupabaseClient()
-  if (!supabase) {
-    redirect('/dashboard/settings?success=1')
-  }
 
   const { error } = await supabase
     .from('churches')

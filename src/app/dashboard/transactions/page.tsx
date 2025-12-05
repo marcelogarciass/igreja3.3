@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getUserWithChurch, isDemoSession, createServerSupabaseClient } from '@/lib/auth'
+import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
 import { ArrowDownCircle, ArrowUpCircle, Receipt, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -9,14 +9,6 @@ import { redirect } from 'next/navigation'
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 async function getTransactions(churchId: string) {
-  if (await isDemoSession()) {
-    return [
-      { id: 't-001', type: 'income', category: 'Dízimo', amount: 1500.0, description: 'Dízimo do mês de Janeiro', date: '2024-01-15' },
-      { id: 't-002', type: 'income', category: 'Oferta', amount: 800.0, description: 'Oferta especial para reforma', date: '2024-01-20' },
-      { id: 't-003', type: 'expense', category: 'Manutenção', amount: 300.0, description: 'Reparo no sistema elétrico', date: '2024-01-25' }
-    ]
-  }
-
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('transactions')

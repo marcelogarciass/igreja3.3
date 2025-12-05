@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 
 interface SidebarProps {
   userRole?: 'admin' | 'treasurer' | 'member'
@@ -61,17 +62,14 @@ const navigation = [
 
 export function Sidebar({ userRole = 'member', churchName = 'Igreja' }: SidebarProps) {
   const pathname = usePathname()
+  const supabase = createSupabaseClient()
 
   const filteredNavigation = navigation.filter(item => 
     item.roles.includes(userRole)
   )
 
   const handleLogout = async () => {
-    // Limpa sessão demo e vai para login
-    try {
-      document.cookie = 'demo_session=; Max-Age=0; path=/; samesite=lax'
-      localStorage.removeItem('demo_user')
-    } catch {}
+    await supabase.auth.signOut()
     window.location.href = '/login'
   }
 

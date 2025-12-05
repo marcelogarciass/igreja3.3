@@ -1,26 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getUserWithChurch, isDemoSession, createServerSupabaseClient } from '@/lib/auth'
+import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
 import { Users, UserPlus } from 'lucide-react'
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 async function getUsersList(churchId: string) {
-  if (await isDemoSession()) {
-    const base = [
-      { id: 'u-001', name: 'Administrador Demo', email: 'admin@demo.com', role: 'admin' },
-      { id: 'u-002', name: 'Tesoureiro Demo', email: 'tesoureiro@demo.com', role: 'treasurer' },
-      { id: 'u-003', name: 'Membro Demo', email: 'membro@demo.com', role: 'member' },
-    ]
-    const c = await cookies()
-    const addedRaw = c.get('demo_users_plus')?.value
-    let added: any[] = []
-    try { added = addedRaw ? JSON.parse(addedRaw) : [] } catch {}
-    return [...base, ...added]
-  }
-
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('users')
@@ -48,16 +34,6 @@ export async function createUser(formData: FormData) {
   const role = (formData.get('role') as string) || 'member'
   const password = (formData.get('password') as string) || ''
   const confirmPassword = (formData.get('confirm_password') as string) || ''
-
-  if (await isDemoSession()) {
-    const c = await cookies()
-    const addedRaw = c.get('demo_users_plus')?.value
-    let added: any[] = []
-    try { added = addedRaw ? JSON.parse(addedRaw) : [] } catch {}
-    added.push({ id: `demo-${Date.now()}`, name, email, role })
-    c.set('demo_users_plus', JSON.stringify(added), { path: '/' })
-    redirect('/dashboard/users?saved=1')
-  }
 
   // Validações básicas de senha
   if (!password || password.length < 6) {
@@ -135,7 +111,6 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
   }
 
   const users = await getUsersList(userData.church_id)
-  const demo = await isDemoSession()
   const saved = searchParams?.saved
   const errorCode = searchParams?.error
 
@@ -179,11 +154,9 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
           <CardTitle className="flex items-center gap-2">Novo Usuário</CardTitle>
         </CardHeader>
         <CardContent>
-          {!demo && (
-            <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-900 mb-3">
-              Para produção, é necessário a chave de serviço para criar usuários com senha.
-            </div>
-          )}
+          <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-900 mb-3">
+            Para produção, é necessário a chave de serviço para criar usuários com senha.
+          </div>
           <form action={createUser} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Nome</label>
@@ -226,7 +199,7 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
         <CardContent>
           <div className="flex items-center gap-3 mb-4">
             <Input placeholder="Buscar por nome ou e-mail" className="max-w-sm" />
-            <Button disabled={false} title={demo ? 'Em demonstração, não persiste no banco' : undefined}>
+            <Button disabled={false}>
               <UserPlus className="h-4 w-4 mr-2" />
               Adicionar Usuário
             </Button>

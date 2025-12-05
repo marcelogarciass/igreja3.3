@@ -10,41 +10,9 @@ import {
   Users,
   AlertTriangle
 } from 'lucide-react'
-import { getUserWithChurch, isDemoSession, createServerSupabaseClient } from '@/lib/auth'
+import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
 
 async function getDashboardData(churchId: string) {
-  // Fallback demo imediato
-  if (await isDemoSession()) {
-    const demoIncome = 8500
-    const demoExpense = 3200
-    const demoBalance = 15750.5
-    const demoMembers = 125
-    const demoChartData = [
-      { month: 'mai', income: 7000, expense: 3000 },
-      { month: 'jun', income: 8200, expense: 2800 },
-      { month: 'jul', income: 7900, expense: 3100 },
-      { month: 'ago', income: 8600, expense: 2900 },
-      { month: 'set', income: 9000, expense: 3200 },
-      { month: 'out', income: 8500, expense: 3000 },
-    ]
-    const demoRecent = [
-      { date: '2024-10-02', description: 'Oferta especial', category: 'Oferta', type: 'income', amount: 500 },
-      { date: '2024-10-05', description: 'Compra de material', category: 'Manutenção', type: 'expense', amount: 120 },
-    ]
-    return {
-      currentIncome: demoIncome,
-      currentExpense: demoExpense,
-      currentBalance: demoBalance,
-      incomeTrend: 12,
-      expenseTrend: -5,
-      balanceTrend: 8,
-      membersCount: demoMembers,
-      chartData: demoChartData,
-      recentTransactions: demoRecent,
-      yearBalance: demoBalance,
-    }
-  }
-
   const supabase = await createServerSupabaseClient()
 
   try {
@@ -178,34 +146,18 @@ async function getDashboardData(churchId: string) {
       yearBalance,
     }
   } catch (err) {
-    // Fallback demo em caso de erro de rede/Supabase
-    const demoIncome = 8500
-    const demoExpense = 3200
-    const demoBalance = 15750.5
-    const demoMembers = 125
-    const demoChartData = [
-      { month: 'mai', income: 7000, expense: 3000 },
-      { month: 'jun', income: 8200, expense: 2800 },
-      { month: 'jul', income: 7900, expense: 3100 },
-      { month: 'ago', income: 8600, expense: 2900 },
-      { month: 'set', income: 9000, expense: 3200 },
-      { month: 'out', income: 8500, expense: 3000 },
-    ]
-    const demoRecent = [
-      { date: '2024-10-02', description: 'Oferta especial', category: 'Oferta', type: 'income', amount: 500 },
-      { date: '2024-10-05', description: 'Compra de material', category: 'Manutenção', type: 'expense', amount: 120 },
-    ]
+    console.error('Erro ao carregar dashboard:', err)
     return {
-      currentIncome: demoIncome,
-      currentExpense: demoExpense,
-      currentBalance: demoBalance,
-      incomeTrend: 12,
-      expenseTrend: -5,
-      balanceTrend: 8,
-      membersCount: demoMembers,
-      chartData: demoChartData,
-      recentTransactions: demoRecent,
-      yearBalance: demoBalance,
+      currentIncome: 0,
+      currentExpense: 0,
+      currentBalance: 0,
+      incomeTrend: 0,
+      expenseTrend: 0,
+      balanceTrend: 0,
+      membersCount: 0,
+      chartData: [],
+      recentTransactions: [],
+      yearBalance: 0,
     }
   }
 }
@@ -227,7 +179,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
   }
 
   const isLowBalance = dashboardData.currentBalance < 1000
-  const saved = searchParams?.saved || searchParams?.demo_saved
+  const saved = searchParams?.saved
   const errorCode = searchParams?.error
   const filterType = searchParams?.filter
   const errorMessages: Record<string, string> = {

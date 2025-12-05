@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getUserWithChurch, isDemoSession, createServerSupabaseClient } from '@/lib/auth'
+import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
 import { Rocket } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
@@ -18,11 +18,6 @@ export async function createQuickTransaction(formData: FormData) {
   const amount = Number(formData.get('amount') || 0)
   const date = (formData.get('date') as string) || new Date().toISOString().slice(0, 10)
   const description = (formData.get('description') as string) || ''
-
-  if (await isDemoSession()) {
-    // Em modo demo, não persiste, mas sinaliza sucesso e retorna ao dashboard
-    redirect('/dashboard?demo_saved=1')
-  }
 
   try {
     const supabase = await createServerSupabaseClient()
@@ -64,8 +59,6 @@ export default async function QuickEntryPage() {
     redirect('/login')
   }
 
-  const demo = await isDemoSession()
-
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3">
@@ -75,12 +68,6 @@ export default async function QuickEntryPage() {
           <p className="text-gray-600">Adicione uma transação de forma simples</p>
         </div>
       </div>
-
-      {demo && (
-        <div className="rounded-md bg-blue-50 border border-blue-200 p-3 text-sm text-blue-900">
-          Modo demonstração ativo: os dados não serão persistidos.
-        </div>
-      )}
 
       <Card>
         <CardHeader>

@@ -20,26 +20,6 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    // Fallback demo: permite acesso sem Supabase quando DNS está inacessível
-    if (email === 'admin@demo.com' && password === 'demo123456') {
-      try {
-        // cria um cookie simples para o middleware/SSR identificar sessão demo
-        document.cookie = `demo_session=1; path=/; max-age=${60 * 60 * 24}; samesite=lax`
-        // também guarda no localStorage para uso client-side
-        localStorage.setItem('demo_user', JSON.stringify({
-          id: '550e8400-e29b-41d4-a716-446655440001',
-          email: 'admin@demo.com',
-          name: 'Administrador Demo',
-          role: 'admin',
-          church_id: '550e8400-e29b-41d4-a716-446655440000'
-        }))
-        router.push('/dashboard')
-        return
-      } finally {
-        setLoading(false)
-      }
-    }
-
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -55,7 +35,7 @@ export default function LoginPage() {
         router.push('/dashboard')
       }
     } catch (err) {
-      setError('Falha de rede ao conectar ao Supabase. Se preferir, use as credenciais de demonstração: admin@demo.com / demo123456.')
+      setError('Falha de rede ao conectar ao Supabase. Tente novamente em instantes.')
     } finally {
       setLoading(false)
     }
@@ -123,6 +103,8 @@ export default function LoginPage() {
               </a>
             </p>
           </div>
+
+          
         </CardContent>
       </Card>
     </div>

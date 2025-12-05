@@ -1,26 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getUserWithChurch, isDemoSession, createServerSupabaseClient } from '@/lib/auth'
+import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
 import { Users, UserPlus } from 'lucide-react'
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
 
 async function getMembers(churchId: string) {
-  if (await isDemoSession()) {
-    const base = [
-      { id: 'm-001', name: 'João Silva', email: 'joao@demo.com', status: 'active', entry_date: '2024-06-12' },
-      { id: 'm-002', name: 'Maria Santos', email: 'maria@demo.com', status: 'active', entry_date: '2024-07-01' },
-      { id: 'm-003', name: 'Carlos Pereira', email: 'carlos@demo.com', status: 'inactive', entry_date: '2023-12-20' },
-      { id: 'm-004', name: 'Ana Oliveira', email: 'ana@demo.com', status: 'active', entry_date: '2024-02-05' },
-    ]
-    const c = await cookies()
-    const addedRaw = c.get('demo_members_plus')?.value
-    let added: any[] = []
-    try { added = addedRaw ? JSON.parse(addedRaw) : [] } catch {}
-    return [...base, ...added]
-  }
-
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('members')
@@ -50,16 +35,6 @@ export async function createMember(formData: FormData) {
   const status = (formData.get('status') as string) || 'active'
   const phone = (formData.get('phone') as string) || ''
   const email = (formData.get('email') as string) || ''
-
-  if (await isDemoSession()) {
-    const c = await cookies()
-    const addedRaw = c.get('demo_members_plus')?.value
-    let added: any[] = []
-    try { added = addedRaw ? JSON.parse(addedRaw) : [] } catch {}
-    added.push({ id: `demo-${Date.now()}`, name, email, status, entry_date })
-    c.set('demo_members_plus', JSON.stringify(added), { path: '/' })
-    redirect('/dashboard/members?saved=1')
-  }
 
   try {
     const supabase = await createServerSupabaseClient()
@@ -116,7 +91,6 @@ export default async function MembersPage({ searchParams }: { searchParams?: { [
   const members = await getMembers(userData.church_id)
   const saved = searchParams?.saved
   const errorCode = searchParams?.error
-  const demo = await isDemoSession()
 
   const errorMessages: Record<string, string> = {
     duplicate: 'Este e-mail já está cadastrado como membro da sua igreja.',
@@ -201,7 +175,7 @@ export default async function MembersPage({ searchParams }: { searchParams?: { [
         <CardContent>
           <div className="flex items-center gap-3 mb-4">
             <Input placeholder="Buscar por nome ou e-mail" className="max-w-sm" />
-            <Button disabled={false} title={demo ? 'Em demonstração, não persiste no banco' : undefined}>
+            <Button disabled={false}>
               <UserPlus className="h-4 w-4 mr-2" />
               Adicionar Membro
             </Button>

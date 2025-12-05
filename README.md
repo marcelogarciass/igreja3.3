@@ -142,6 +142,23 @@ O projeto é compatível com qualquer plataforma que suporte Next.js.
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
+## 🧩 Bootstrap de Usuário Admin
+
+Opção A (SQL Editor do Supabase)
+- Abra SQL Editor e execute `supabase/migrations/002_policies_and_initial_data.sql`.
+- Ajuste o email/senha no arquivo conforme sua necessidade.
+- Em produção, não execute `supabase/migrations/002_demo_data.sql`.
+
+Opção B (Endpoint seguro)
+- Defina `BOOTSTRAP_TOKEN` em `.env.local`.
+- Inicie o servidor em produção (`npm run build && npm start`).
+- Acesse: `GET /api/bootstrap?token=SEU_TOKEN&email=admin@admin.com&password=admin123456&church=Igreja Matriz`.
+- O endpoint cria (ou garante) o usuário admin e a igreja e faz o vínculo em `public.users`.
+
+Após o bootstrap:
+- Faça login em `/login` com o email/senha definidos.
+- Verifique que o dashboard carrega e que as políticas RLS funcionam.
+
 ## 📞 Suporte
 
 Para suporte, entre em contato através do email: suporte@multichurch.com

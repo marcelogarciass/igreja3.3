@@ -85,20 +85,7 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* Demo Notice */}
-        <div className="mt-16 text-center">
-          <Card className="max-w-2xl mx-auto bg-yellow-50 border-yellow-200">
-            <CardContent className="p-6">
-              <h3 className="font-semibold text-yellow-800 mb-2">
-                🚧 Modo Demonstração
-              </h3>
-              <p className="text-yellow-700 text-sm">
-                Este é um ambiente de desenvolvimento local. Para usar em produção, 
-                configure as variáveis de ambiente do Supabase no arquivo .env.local
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+
       </div>
     </div>
   )
