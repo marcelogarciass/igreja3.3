@@ -343,10 +343,10 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
             </CardDescription>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/dashboard/quick-entry" className="text-sm text-primary hover:underline">
+            <Link href="/dashboard/quick-entry" prefetch={false} className="text-sm text-primary hover:underline">
               Novo lançamento
             </Link>
-            <Link href="/dashboard/transactions" className="text-sm text-primary hover:underline">
+            <Link href="/dashboard/transactions" prefetch={false} className="text-sm text-primary hover:underline">
               Ver todas
             </Link>
           </div>
@@ -354,13 +354,13 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
         <CardContent>
           {/* Filtro rápido */}
           <div className="flex items-center gap-2 mb-3">
-            <Link href="/dashboard" className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-medium ring-1 ring-inset ${!filterType ? 'bg-primary/10 text-primary ring-primary/30' : 'text-gray-700 ring-gray-300 hover:bg-gray-50'}`}>
+            <Link href="/dashboard" prefetch={false} className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-medium ring-1 ring-inset ${!filterType ? 'bg-primary/10 text-primary ring-primary/30' : 'text-gray-700 ring-gray-300 hover:bg-gray-50'}`}>
               Todos
             </Link>
-            <Link href="/dashboard?filter=income" className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-medium ring-1 ring-inset ${filterType === 'income' ? 'bg-green-100 text-green-700 ring-green-600/20' : 'text-gray-700 ring-gray-300 hover:bg-gray-50'}`}>
+            <Link href="/dashboard?filter=income" prefetch={false} className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-medium ring-1 ring-inset ${filterType === 'income' ? 'bg-green-100 text-green-700 ring-green-600/20' : 'text-gray-700 ring-gray-300 hover:bg-gray-50'}`}>
               Entradas ({countIncome})
             </Link>
-            <Link href="/dashboard?filter=expense" className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-medium ring-1 ring-inset ${filterType === 'expense' ? 'bg-red-100 text-red-700 ring-red-600/20' : 'text-gray-700 ring-gray-300 hover:bg-gray-50'}`}>
+            <Link href="/dashboard?filter=expense" prefetch={false} className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-medium ring-1 ring-inset ${filterType === 'expense' ? 'bg-red-100 text-red-700 ring-red-600/20' : 'text-gray-700 ring-gray-300 hover:bg-gray-50'}`}>
               Saídas ({countExpense})
             </Link>
           </div>
@@ -384,7 +384,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
                       <td className="px-4 py-2 whitespace-nowrap">{new Date(t.date).toLocaleDateString('pt-BR')}</td>
                       <td className="px-4 py-2 whitespace-nowrap">{t.description}</td>
                       <td className="px-4 py-2 whitespace-nowrap">{t.category}</td>
-                      <td className="px-4 py-2 whitespace-nowrap">{t.member_name ? <Link href="/dashboard/members" className="text-primary hover:underline">{t.member_name}</Link> : '-'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{t.member_name ? <Link href="/dashboard/members" prefetch={false} className="text-primary hover:underline">{t.member_name}</Link> : '-'}</td>
                       <td className="px-4 py-2 whitespace-nowrap">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${t.type === 'income' ? 'bg-green-50 text-green-700 ring-green-600/20' : 'bg-red-50 text-red-700 ring-red-600/20'}`}>
                           {t.type === 'income' ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}

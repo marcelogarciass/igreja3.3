@@ -83,7 +83,7 @@ export default async function TransactionsPage() {
         <CardContent>
           <div className="flex items-center gap-3 mb-4">
             <Input placeholder="Buscar descrição ou categoria" className="max-w-sm" />
-            <Link href="/dashboard/quick-entry">
+            <Link href="/dashboard/quick-entry" prefetch={false}>
               <Button>
                 <Plus className="h-4 w-4 mr-2" /> Nova Transação
               </Button>

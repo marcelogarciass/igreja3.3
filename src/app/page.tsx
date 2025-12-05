@@ -71,12 +71,12 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Link href="/login">
+              <Link href="/login" prefetch={false}>
                 <Button className="w-full" size="lg">
                   Fazer Login
                 </Button>
               </Link>
-              <Link href="/register">
+              <Link href="/register" prefetch={false}>
                 <Button variant="outline" className="w-full" size="lg">
                   Criar Conta
                 </Button>
