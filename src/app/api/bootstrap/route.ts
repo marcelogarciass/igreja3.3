@@ -27,7 +27,7 @@ export async function GET(req: Request) {
       if (listErr) throw listErr
       const existing = usersList?.users?.find((u) => (u.email || '').toLowerCase() === email)
       if (existing) userId = existing.id
-    } catch (e) {
+    } catch {
       // prosseguir com criação
     }
 
@@ -98,7 +98,8 @@ export async function GET(req: Request) {
       userId,
       note: 'Admin seed verificado/criado com sucesso',
     })
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Erro desconhecido' }, { status: 500 })
+  } catch (err: unknown) {
+    const message = typeof err === 'object' && err && 'message' in err ? String((err as { message: unknown }).message) : 'Erro desconhecido'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

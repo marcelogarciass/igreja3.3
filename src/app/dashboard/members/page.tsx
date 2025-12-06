@@ -5,7 +5,7 @@ import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
 import { Users, UserPlus } from 'lucide-react'
 import { redirect } from 'next/navigation'
 
-async function getMembers(churchId: string) {
+async function getMembers(churchId: string): Promise<Member[]> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('members')
@@ -18,7 +18,7 @@ async function getMembers(churchId: string) {
     return []
   }
 
-  return data || []
+  return (data || []) as Member[]
 }
 
 export async function createMember(formData: FormData) {
@@ -192,7 +192,7 @@ export default async function MembersPage({ searchParams }: { searchParams?: { [
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {members.map((m: any) => (
+                {members.map((m) => (
                   <tr key={m.id}>
                     <td className="px-4 py-2 whitespace-nowrap">{m.name}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{m.email}</td>
@@ -211,4 +211,11 @@ export default async function MembersPage({ searchParams }: { searchParams?: { [
       </Card>
     </div>
   )
+}
+type Member = {
+  id: string
+  name: string
+  email: string | null
+  status: 'active' | 'inactive'
+  entry_date: string
 }

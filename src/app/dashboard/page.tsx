@@ -29,13 +29,14 @@ async function getDashboardData(churchId: string) {
       .lte('date', `${currentYear}-12-31`)
   
     // Calculate totals
-    const currentMonthTransactions = transactions?.filter(t => {
+    const tx: Transaction[] = (transactions || []) as Transaction[]
+    const currentMonthTransactions = tx.filter(t => {
       const transactionDate = new Date(t.date)
       return transactionDate.getMonth() + 1 === currentMonth && 
              transactionDate.getFullYear() === currentYear
     }) || []
   
-    const previousMonthTransactions = transactions?.filter(t => {
+    const previousMonthTransactions = tx.filter(t => {
       const transactionDate = new Date(t.date)
       const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1
       const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear
@@ -63,10 +64,10 @@ async function getDashboardData(churchId: string) {
     const previousBalance = previousIncome - previousExpense
   
     // Saldo acumulado do ano
-    const yearIncome = (transactions || [])
+    const yearIncome = tx
       .filter((t) => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0)
-    const yearExpense = (transactions || [])
+    const yearExpense = tx
       .filter((t) => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0)
     const yearBalance = yearIncome - yearExpense
@@ -90,7 +91,7 @@ async function getDashboardData(churchId: string) {
       const month = date.getMonth() + 1
       const year = date.getFullYear()
       
-      const monthTransactions = transactions?.filter(t => {
+      const monthTransactions = tx.filter(t => {
         const transactionDate = new Date(t.date)
         return transactionDate.getMonth() + 1 === month && 
                transactionDate.getFullYear() === year
@@ -112,22 +113,22 @@ async function getDashboardData(churchId: string) {
     }
 
     // Recent transactions (últimas 5 pelo campo data)
-    const recentTransactions = (transactions || [])
+    const recentTransactions = tx
       .slice()
       .sort((a, b) => +new Date(b.created_at ?? b.date) - +new Date(a.created_at ?? a.date))
       .slice(0, 5)
 
     // Anexar nome do membro (quando houver)
-    let recentTransactionsWithMember = recentTransactions
-    const memberIds = recentTransactions.filter((t: any) => !!t.member_id).map((t: any) => t.member_id)
+    let recentTransactionsWithMember: Transaction[] = recentTransactions
+    const memberIds = recentTransactions.filter((t) => !!t.member_id).map((t) => t.member_id as string)
     if (memberIds.length > 0) {
       const { data: members } = await supabase
         .from('members')
         .select('id, name')
         .eq('church_id', churchId)
         .in('id', memberIds)
-      const membersMap: Record<string, string> = Object.fromEntries((members || []).map((m: any) => [m.id, m.name]))
-      recentTransactionsWithMember = recentTransactions.map((t: any) => ({
+      const membersMap: Record<string, string> = Object.fromEntries((members || []).map((m: { id: string; name: string }) => [m.id, m.name]))
+      recentTransactionsWithMember = recentTransactions.map((t) => ({
         ...t,
         member_name: t.member_id ? membersMap[t.member_id] ?? null : null,
       }))
@@ -189,12 +190,12 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
 
   const recent = dashboardData.recentTransactions || []
   const filteredRecent = filterType === 'income'
-    ? recent.filter((t: any) => t.type === 'income')
+    ? recent.filter((t: Transaction) => t.type === 'income')
     : filterType === 'expense'
-      ? recent.filter((t: any) => t.type === 'expense')
+      ? recent.filter((t: Transaction) => t.type === 'expense')
       : recent
-  const countIncome = recent.filter((t: any) => t.type === 'income').length
-  const countExpense = recent.filter((t: any) => t.type === 'expense').length
+  const countIncome = recent.filter((t: Transaction) => t.type === 'income').length
+  const countExpense = recent.filter((t: Transaction) => t.type === 'expense').length
 
   return (
     <div className="p-6 space-y-6">
@@ -331,7 +332,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredRecent.map((t: any, idx: number) => (
+                  {filteredRecent.map((t: Transaction, idx: number) => (
                     <tr key={idx}>
                       <td className="px-4 py-2 whitespace-nowrap">{new Date(t.date).toLocaleDateString('pt-BR')}</td>
                       <td className="px-4 py-2 whitespace-nowrap">{t.description}</td>
@@ -362,4 +363,15 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
       </Card>
     </div>
   )
+}
+type Transaction = {
+  id?: string
+  date: string
+  created_at?: string
+  description: string
+  category: string
+  type: 'income' | 'expense'
+  amount: number
+  member_id?: string | null
+  member_name?: string | null
 }

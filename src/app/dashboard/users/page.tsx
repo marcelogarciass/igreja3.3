@@ -6,7 +6,7 @@ import { Users, UserPlus } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-async function getUsersList(churchId: string) {
+async function getUsersList(churchId: string): Promise<UserRow[]> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('users')
@@ -19,7 +19,7 @@ async function getUsersList(churchId: string) {
     return []
   }
 
-  return data || []
+  return (data || []) as UserRow[]
 }
 
 export async function createUser(formData: FormData) {
@@ -215,7 +215,7 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((u: any) => (
+                {users.map((u) => (
                   <tr key={u.id}>
                     <td className="px-4 py-2 whitespace-nowrap">{u.name}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{u.email}</td>
@@ -231,4 +231,10 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
       </Card>
     </div>
   )
+}
+type UserRow = {
+  id: string
+  name: string
+  email: string
+  role: 'admin' | 'treasurer' | 'member'
 }

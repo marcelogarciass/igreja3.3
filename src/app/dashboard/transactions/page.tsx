@@ -8,7 +8,7 @@ import { redirect } from 'next/navigation'
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
-async function getTransactions(churchId: string) {
+async function getTransactions(churchId: string): Promise<Transaction[]> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('transactions')
@@ -21,7 +21,7 @@ async function getTransactions(churchId: string) {
     return []
   }
 
-  return data || []
+  return (data || []) as Transaction[]
 }
 
 export default async function TransactionsPage() {
@@ -31,8 +31,8 @@ export default async function TransactionsPage() {
   }
 
   const transactions = await getTransactions(userData.church_id)
-  const incomeTotal = transactions.filter((t: any) => t.type === 'income').reduce((s: number, t: any) => s + Number(t.amount), 0)
-  const expenseTotal = transactions.filter((t: any) => t.type === 'expense').reduce((s: number, t: any) => s + Number(t.amount), 0)
+  const incomeTotal = transactions.filter((t) => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
+  const expenseTotal = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
 
   return (
     <div className="p-6 space-y-6">
@@ -94,7 +94,7 @@ export default async function TransactionsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {transactions.map((t: any) => (
+                {transactions.map((t) => (
                   <tr key={t.id}>
                     <td className="px-4 py-2 whitespace-nowrap">{new Date(t.date).toLocaleDateString('pt-BR')}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{t.description}</td>
@@ -114,4 +114,12 @@ export default async function TransactionsPage() {
       </Card>
     </div>
   )
+}
+type Transaction = {
+  id: string
+  date: string
+  description: string
+  category: string
+  type: 'income' | 'expense'
+  amount: number
 }
