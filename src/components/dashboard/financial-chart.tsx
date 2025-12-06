@@ -51,7 +51,11 @@ export function FinancialChart({ data, type = 'line' }: FinancialChartProps) {
               <LineChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis tickFormatter={formatCurrency} />
+                <YAxis 
+                  tickFormatter={(value) => formatCurrency(value)} 
+                  width={80}
+                  domain={[0, 'auto']}
+                />
                 <Tooltip content={<CustomTooltip />} />
                 <Line 
                   type="monotone" 
@@ -72,7 +76,11 @@ export function FinancialChart({ data, type = 'line' }: FinancialChartProps) {
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis tickFormatter={formatCurrency} />
+                <YAxis 
+                  tickFormatter={(value) => formatCurrency(value)} 
+                  width={80}
+                  domain={[0, 'auto']}
+                />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="income" fill="#22c55e" name="income" />
                 <Bar dataKey="expense" fill="#ef4444" name="expense" />
