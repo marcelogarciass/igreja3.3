@@ -20,6 +20,25 @@ export async function GET(req: Request) {
   try {
     const admin = createAdminClient()
 
+    // 0) Garantir Bucket 'logos'
+    try {
+      const { data: buckets } = await admin.storage.listBuckets()
+      const logosBucket = buckets?.find((b) => b.name === 'logos')
+      if (!logosBucket) {
+        await admin.storage.createBucket('logos', {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+        })
+      } else if (!logosBucket.public) {
+        await admin.storage.updateBucket('logos', {
+          public: true,
+        })
+      }
+    } catch (e) {
+      console.error('Erro ao verificar/criar bucket:', e)
+    }
+
     // 1) Verificar se usuário já existe
     let userId: string | null = null
     try {

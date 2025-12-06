@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Upload, X, Loader2 } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { uploadLogoAction } from '@/app/dashboard/settings/upload-action'
 
 interface LogoUploadProps {
   defaultValue?: string | null
@@ -25,29 +25,18 @@ export default function LogoUpload({ defaultValue }: LogoUploadProps) {
     setUploading(true)
 
     try {
-      const supabase = createClient()
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExt}`
-      const filePath = `${fileName}`
+      const formData = new FormData()
+      formData.append('file', file)
 
-      // Tenta fazer upload para o bucket 'logos' (nome mais provável)
-      // Se falhar, o usuário receberá um alerta
-      const bucketName = 'logos' 
-      
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        })
+      const result = await uploadLogoAction(formData)
 
-      if (uploadError) {
-        console.error('Upload error details:', uploadError)
-        throw uploadError
+      if (result.error) {
+        throw new Error(result.error)
       }
 
-      const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath)
-      setLogoUrl(data.publicUrl)
+      if (result.url) {
+        setLogoUrl(result.url)
+      }
     } catch (error) {
       console.error('Error uploading logo:', error)
       alert('Erro ao fazer upload da logo. Verifique se o arquivo é uma imagem válida e tente novamente.')
