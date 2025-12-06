@@ -21,12 +21,13 @@ export async function updateChurchSettings(formData: FormData) {
   const email = (formData.get('email') as string) || ''
   const primary_color = (formData.get('primary_color') as string) || ''
   const secondary_color = (formData.get('secondary_color') as string) || ''
+  const logo_url = (formData.get('logo_url') as string) || ''
 
   const supabase = await createServerSupabaseClient()
 
   const { error } = await supabase
     .from('churches')
-    .update({ name, address, phone, email, primary_color, secondary_color })
+    .update({ name, address, phone, email, primary_color, secondary_color, logo_url })
     .eq('id', userData.church_id)
 
   if (error) {
@@ -139,7 +140,7 @@ export default async function SettingsPage({
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <LogoUpload />
+              <LogoUpload defaultValue={church?.logo_url} />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ColorField
