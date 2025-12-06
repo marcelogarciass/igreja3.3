@@ -179,7 +179,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
     }).format(value)
   }
 
-  const isLowBalance = dashboardData.currentBalance < 1000
+  const isLowBalance = dashboardData.yearBalance < 1000
   const saved = searchParams?.saved
   const errorCode = searchParams?.error
   const filterType = searchParams?.filter
