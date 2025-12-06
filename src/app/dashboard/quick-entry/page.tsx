@@ -19,6 +19,8 @@ export async function createQuickTransaction(formData: FormData) {
   const date = (formData.get('date') as string) || new Date().toISOString().slice(0, 10)
   const description = (formData.get('description') as string) || ''
 
+  let errorType = null
+
   try {
     const supabase = await createServerSupabaseClient()
     const { error } = await supabase.from('transactions').insert({
@@ -33,23 +35,21 @@ export async function createQuickTransaction(formData: FormData) {
 
     if (error) {
       console.error('Erro ao salvar transação:', error)
-      // Mesmo em erro, revalida páginas relacionadas para evitar cache obsoleto
+      errorType = 'transaction'
+    } else {
+      // Revalida dashboard e lista de transações para refletir a nova transação
       revalidatePath('/dashboard')
       revalidatePath('/dashboard/transactions')
-      redirect('/dashboard?error=transaction')
     }
-
-    // Revalida dashboard e lista de transações para refletir a nova transação
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/transactions')
-
-    // Redireciona ao dashboard com sucesso
-    redirect('/dashboard?saved=1')
   } catch (e) {
     console.error('Erro geral ao salvar transação:', e)
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/transactions')
-    redirect('/dashboard?error=server')
+    errorType = 'server'
+  }
+
+  if (errorType) {
+    redirect(`/dashboard?error=${errorType}`)
+  } else {
+    redirect('/dashboard?saved=1')
   }
 }
 
