@@ -15,7 +15,7 @@ export default function HomePage() {
             </div>
           </div>
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            MultiChurch Gestão
+            Nexus Igreja
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Sistema robusto de gestão financeira multi-tenant para igrejas

@@ -79,7 +79,7 @@ export function Sidebar({ userRole = 'member', churchName = 'Igreja' }: SidebarP
       <div className="flex items-center gap-2 p-6 border-b border-gray-200">
         <Church className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="font-semibold text-lg text-gray-900">MultiChurch</h1>
+          <h1 className="font-semibold text-lg text-gray-900">Nexus Igreja</h1>
           <p className="text-sm text-gray-500 truncate">{churchName}</p>
         </div>
       </div>
