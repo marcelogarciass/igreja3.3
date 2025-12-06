@@ -23,8 +23,9 @@ export default function RegisterPage() {
     try {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
       if (!url) return false
-      await fetch(url, { method: 'HEAD', mode: 'no-cors' })
-      return true
+      const health = `${url.replace(/\/+$/, '')}/auth/v1/health`
+      const res = await fetch(health, { method: 'GET', cache: 'no-store' })
+      return res.ok
     } catch {
       return false
     }
