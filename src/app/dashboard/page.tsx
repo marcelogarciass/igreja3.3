@@ -71,11 +71,16 @@ async function getDashboardData(churchId: string) {
       .filter((t) => t.type === 'expense')
       .reduce((sum, t) => sum + Number(t.amount), 0)
     const yearBalance = yearIncome - yearExpense
-  
+
     // Calculate trends
     const incomeTrend = previousIncome > 0 ? ((currentIncome - previousIncome) / previousIncome) * 100 : 0
     const expenseTrend = previousExpense > 0 ? ((currentExpense - previousExpense) / previousExpense) * 100 : 0
-    const balanceTrend = previousBalance !== 0 ? ((currentBalance - previousBalance) / Math.abs(previousBalance)) * 100 : 0
+    
+    // Balance Trend: Compare Total Accumulated Balance (Current vs Previous Month)
+    // yearBalance is the current accumulated balance.
+    // previousYearBalance is yearBalance minus the net change of the current month.
+    const previousYearBalance = yearBalance - currentBalance
+    const balanceTrend = previousYearBalance !== 0 ? (currentBalance / Math.abs(previousYearBalance)) * 100 : 0
   
     // Get members count
     const { count: membersCount } = await supabase
