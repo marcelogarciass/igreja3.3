@@ -20,7 +20,7 @@ export default function LoginPage() {
       if (!url) return false
       const health = `${url.replace(/\/+$/, '')}/auth/v1/health`
       const res = await fetch(health, { method: 'GET', cache: 'no-store' })
-      return res.ok
+      return res.ok || res.status === 401 || res.status === 403 || res.status === 404
     } catch {
       return false
     }
