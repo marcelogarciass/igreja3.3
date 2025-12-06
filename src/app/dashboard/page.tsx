@@ -31,17 +31,17 @@ async function getDashboardData(churchId: string) {
     // Calculate totals
     const tx: Transaction[] = (transactions || []) as Transaction[]
     const currentMonthTransactions = tx.filter(t => {
-      const transactionDate = new Date(t.date)
-      return transactionDate.getMonth() + 1 === currentMonth && 
-             transactionDate.getFullYear() === currentYear
+      // Parse date string "YYYY-MM-DD" manually to avoid timezone issues
+      const [year, month] = t.date.split('-').map(Number)
+      return month === currentMonth && year === currentYear
     }) || []
   
     const previousMonthTransactions = tx.filter(t => {
-      const transactionDate = new Date(t.date)
+      // Parse date string "YYYY-MM-DD" manually to avoid timezone issues
+      const [year, month] = t.date.split('-').map(Number)
       const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1
       const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear
-      return transactionDate.getMonth() + 1 === prevMonth && 
-             transactionDate.getFullYear() === prevYear
+      return month === prevMonth && year === prevYear
     }) || []
   
     const currentIncome = currentMonthTransactions
@@ -92,9 +92,9 @@ async function getDashboardData(churchId: string) {
       const year = date.getFullYear()
       
       const monthTransactions = tx.filter(t => {
-        const transactionDate = new Date(t.date)
-        return transactionDate.getMonth() + 1 === month && 
-               transactionDate.getFullYear() === year
+        // Parse date string "YYYY-MM-DD" manually to avoid timezone issues
+        const [tYear, tMonth] = t.date.split('-').map(Number)
+        return tMonth === month && tYear === year
       }) || []
   
       const monthIncome = monthTransactions
@@ -263,7 +263,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
         
         <StatsCard
           title="Saldo Atual"
-          value={formatCurrency(dashboardData.currentBalance)}
+          value={formatCurrency(dashboardData.yearBalance)}
           icon={Wallet}
           trend={{
             value: Math.round(dashboardData.balanceTrend),
