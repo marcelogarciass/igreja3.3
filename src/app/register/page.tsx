@@ -22,12 +22,26 @@ export default function RegisterPage() {
   async function canReachSupabaseHost() {
     try {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-      if (!url) return false
-      const health = `${url.replace(/\/+$/, '')}/auth/v1/health`
-      const res = await fetch(health, { method: 'GET', cache: 'no-store' })
+      if (!url) return true
+      const base = url.replace(/\/+$/, '')
+      const endpoint = `${base}/auth/v1/health`
+      const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      const headers: Record<string, string> = { Accept: 'application/json' }
+      if (anon) {
+        headers.apikey = anon
+        headers.Authorization = `Bearer ${anon}`
+      }
+      const res = await fetch(endpoint, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-store',
+        credentials: 'omit',
+        redirect: 'follow',
+        headers,
+      })
       return res.ok || res.status === 401 || res.status === 403 || res.status === 404
     } catch {
-      return false
+      return true
     }
   }
 
