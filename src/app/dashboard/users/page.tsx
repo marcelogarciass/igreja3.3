@@ -4,13 +4,13 @@ import { Input } from '@/components/ui/input'
 import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
 import { Users, UserPlus } from 'lucide-react'
 import { redirect } from 'next/navigation'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { UserForm } from '@/components/users/user-form'
 
 async function getUsersList(churchId: string): Promise<UserRow[]> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('users')
-    .select('id,name,email,role')
+    .select('id,name,email,role,photo_url')
     .eq('church_id', churchId)
     .order('name', { ascending: true })
 
@@ -20,88 +20,6 @@ async function getUsersList(churchId: string): Promise<UserRow[]> {
   }
 
   return (data || []) as UserRow[]
-}
-
-export async function createUser(formData: FormData) {
-  'use server'
-  const userData = await getUserWithChurch()
-  if (!userData) {
-    redirect('/login')
-  }
-
-  const name = (formData.get('name') as string) || ''
-  const email = (formData.get('email') as string) || ''
-  const role = (formData.get('role') as string) || 'member'
-  const password = (formData.get('password') as string) || ''
-  const confirmPassword = (formData.get('confirm_password') as string) || ''
-
-  // Validações básicas de senha
-  if (!password || password.length < 6) {
-    redirect('/dashboard/users?error=password_length')
-  }
-  if (password !== confirmPassword) {
-    redirect('/dashboard/users?error=password_mismatch')
-  }
-
-  try {
-    const admin = createAdminClient()
-
-    // Checa duplicidade de e-mail na tabela users da mesma igreja
-    const { data: existingUsers, error: existingError } = await admin
-      .from('users')
-      .select('id')
-      .eq('church_id', userData.church_id)
-      .eq('email', email)
-      .limit(1)
-
-    if (existingError) {
-      console.error('Erro ao verificar duplicidade na tabela users:', existingError)
-      redirect('/dashboard/users?error=db_check')
-    }
-
-    if (existingUsers && existingUsers.length > 0) {
-      redirect('/dashboard/users?error=duplicate')
-    }
-
-    // Cria usuário diretamente no Auth com senha
-    const { data: created, error: createError } = await admin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { name, role },
-    })
-
-    if (createError) {
-      console.error('Erro ao criar usuário no Auth:', createError)
-      redirect('/dashboard/users?error=auth_create')
-    }
-
-    const authUserId = created?.user?.id
-    if (!authUserId) {
-      console.error('ID do usuário Auth ausente após criação.')
-      redirect('/dashboard/users?error=auth_id')
-    }
-
-    const { error: insertError } = await admin
-      .from('users')
-      .insert({
-        id: authUserId,
-        church_id: userData.church_id,
-        email,
-        name,
-        role,
-      })
-
-    if (insertError) {
-      console.error('Erro ao inserir usuário na tabela users:', insertError)
-      redirect('/dashboard/users?error=db')
-    }
-
-    redirect('/dashboard/users?saved=1')
-  } catch (e) {
-    console.error('Erro geral na criação de usuário em produção:', e)
-    redirect('/dashboard/users?error=server')
-  }
 }
 
 export default async function UsersPage({ searchParams }: { searchParams?: { [key: string]: string } }) {
@@ -148,49 +66,8 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
         </div>
       )}
 
-      {/* Novo Usuário */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">Novo Usuário</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-900 mb-3">
-            Para produção, é necessário a chave de serviço para criar usuários com senha.
-          </div>
-          <form action={createUser} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome</label>
-              <Input name="name" placeholder="Nome" required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">E-mail</label>
-              <Input name="email" type="email" placeholder="email@exemplo.com" required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Papel</label>
-              <select name="role" defaultValue="member" className="border rounded-md p-2">
-                <option value="member">Membro</option>
-                <option value="treasurer">Tesoureiro</option>
-                <option value="admin">Administrador</option>
-              </select>
-            </div>
-            {/* Senha */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Senha</label>
-              <Input name="password" type="password" placeholder="Defina uma senha" required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Confirmar Senha</label>
-              <Input name="confirm_password" type="password" placeholder="Repita a senha" required />
-            </div>
-            <div className="md:col-span-2">
-              <Button type="submit">
-                <UserPlus className="h-4 w-4 mr-2" /> Adicionar Usuário
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      {/* Novo Usuário Form */}
+      <UserForm />
 
       <Card>
         <CardHeader>
@@ -217,7 +94,20 @@ export default async function UsersPage({ searchParams }: { searchParams?: { [ke
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map((u) => (
                   <tr key={u.id}>
-                    <td className="px-4 py-2 whitespace-nowrap">{u.name}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        {u.photo_url ? (
+                          <div className="h-8 w-8 rounded-full overflow-hidden border">
+                            <img src={u.photo_url} alt={u.name} className="h-full w-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium">
+                            {u.name.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <span>{u.name}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-2 whitespace-nowrap">{u.email}</td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       {u.role === 'admin' ? 'Administrador' : u.role === 'treasurer' ? 'Tesoureiro' : 'Membro'}
@@ -237,4 +127,5 @@ type UserRow = {
   name: string
   email: string
   role: 'admin' | 'treasurer' | 'member'
+  photo_url?: string | null
 }
