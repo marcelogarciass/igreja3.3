@@ -16,7 +16,33 @@ export async function createMember(prevState: any, formData: FormData) {
   const birth_date = (formData.get('birth_date') as string) || null
   const profession = (formData.get('profession') as string) || ''
   const cpf = (formData.get('cpf') as string) || ''
-  const photo_url = (formData.get('photo_url') as string) || ''
+  
+  // Photo Handling
+  let photo_url = (formData.get('existing_photo_url') as string) || ''
+  const photoFile = formData.get('photo') as File
+  const supabase = await createServerSupabaseClient()
+
+  if (photoFile && photoFile.size > 0 && photoFile.name !== 'undefined') {
+    try {
+      const fileExt = photoFile.name.split('.').pop()
+      const fileName = `${userData.church_id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('member-photos')
+        .upload(fileName, photoFile)
+
+      if (uploadError) {
+        console.error('Erro ao fazer upload da foto:', uploadError)
+      } else {
+        const { data: { publicUrl } } = supabase.storage
+          .from('member-photos')
+          .getPublicUrl(fileName)
+        photo_url = publicUrl
+      }
+    } catch (e) {
+      console.error('Erro no processamento da foto:', e)
+    }
+  }
 
   // Address
   const address = (formData.get('address') as string) || ''
@@ -43,8 +69,6 @@ export async function createMember(prevState: any, formData: FormData) {
 
   const new_family_name = (formData.get('new_family_name') as string) || ''
   let family_id = (formData.get('family_id') as string) || null
-
-  const supabase = await createServerSupabaseClient()
 
   try {
     // 1. Create Family if needed
@@ -142,7 +166,33 @@ export async function updateMember(prevState: any, formData: FormData) {
   const birth_date = (formData.get('birth_date') as string) || null
   const profession = (formData.get('profession') as string) || ''
   const cpf = (formData.get('cpf') as string) || ''
-  const photo_url = (formData.get('photo_url') as string) || ''
+  
+  // Photo Handling
+  let photo_url = (formData.get('existing_photo_url') as string) || ''
+  const photoFile = formData.get('photo') as File
+  const supabase = await createServerSupabaseClient()
+
+  if (photoFile && photoFile.size > 0 && photoFile.name !== 'undefined') {
+    try {
+      const fileExt = photoFile.name.split('.').pop()
+      const fileName = `${userData.church_id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('member-photos')
+        .upload(fileName, photoFile)
+
+      if (uploadError) {
+        console.error('Erro ao fazer upload da foto:', uploadError)
+      } else {
+        const { data: { publicUrl } } = supabase.storage
+          .from('member-photos')
+          .getPublicUrl(fileName)
+        photo_url = publicUrl
+      }
+    } catch (e) {
+      console.error('Erro no processamento da foto:', e)
+    }
+  }
 
   // Address
   const address = (formData.get('address') as string) || ''
@@ -169,8 +219,6 @@ export async function updateMember(prevState: any, formData: FormData) {
 
   const new_family_name = (formData.get('new_family_name') as string) || ''
   let family_id = (formData.get('family_id') as string) || null
-
-  const supabase = await createServerSupabaseClient()
 
   try {
     // 1. Create Family if needed

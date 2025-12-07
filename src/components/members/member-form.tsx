@@ -22,6 +22,15 @@ export function MemberForm({ initialData }: MemberFormProps) {
   const action = initialData ? updateMember : createMember
   const [state, formAction, isPending] = useActionState(action, initialState)
   const [childrenList, setChildrenList] = useState<string[]>(initialData?.children_names || [])
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.photo_url || null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+    }
+  }
 
   const addChild = () => {
     setChildrenList([...childrenList, ''])
@@ -89,8 +98,22 @@ export function MemberForm({ initialData }: MemberFormProps) {
                     <Input name="email" type="email" placeholder="email@exemplo.com" defaultValue={initialData?.email || ''} />
                   </div>
                    <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium">Foto (URL)</label>
-                    <Input name="photo_url" placeholder="https://..." defaultValue={initialData?.photo_url || ''} />
+                    <label className="text-sm font-medium">Foto</label>
+                    <div className="flex items-center gap-4">
+                      {previewUrl && (
+                        <div className="relative h-16 w-16 rounded-full overflow-hidden border">
+                          <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
+                        </div>
+                      )}
+                      <Input 
+                        name="photo" 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleFileChange}
+                        className="flex-1"
+                      />
+                      <input type="hidden" name="existing_photo_url" value={initialData?.photo_url || ''} />
+                    </div>
                   </div>
                 </div>
               </CardContent>
