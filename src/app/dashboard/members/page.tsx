@@ -100,11 +100,11 @@ export default async function MembersPage({ searchParams }: { searchParams?: { [
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center gap-3">
         <Users className="h-8 w-8 text-blue-600" />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Membros</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Membros</h1>
           <p className="text-gray-600">Lista de membros da sua igreja</p>
         </div>
       </div>
@@ -173,8 +173,8 @@ export default async function MembersPage({ searchParams }: { searchParams?: { [
           <CardTitle className="flex items-center gap-2">Lista</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-3 mb-4">
-            <Input placeholder="Buscar por nome ou e-mail" className="max-w-sm" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
+            <Input placeholder="Buscar por nome ou e-mail" className="max-w-full sm:max-w-sm" />
             <Button disabled={false}>
               <UserPlus className="h-4 w-4 mr-2" />
               Adicionar Membro

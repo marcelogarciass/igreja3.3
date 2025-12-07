@@ -56,12 +56,12 @@ export default async function SettingsPage({
   const church = userData.churches
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Settings className="h-8 w-8 text-blue-600" />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Configurações</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Configurações</h1>
           <p className="text-gray-600">
             Gerencie as configurações da sua igreja
           </p>

@@ -203,10 +203,10 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
   const countExpense = recent.filter((t: Transaction) => t.type === 'expense').length
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600">
           Visão geral das finanças de {userData.churches?.name}
         </p>
@@ -293,14 +293,14 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
 
       {/* Recent Transactions */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
           <div>
             <CardTitle>Transações Recentes</CardTitle>
             <CardDescription>
               Últimas movimentações financeiras
             </CardDescription>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
             <Link href="/dashboard/quick-entry" prefetch={false} className="text-sm text-primary hover:underline">
               Novo lançamento
             </Link>
@@ -311,7 +311,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
         </CardHeader>
         <CardContent>
           {/* Filtro rápido */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
             <Link href="/dashboard" prefetch={false} className={`inline-flex items-center rounded-md px-3 py-1 text-xs font-medium ring-1 ring-inset ${!filterType ? 'bg-primary/10 text-primary ring-primary/30' : 'text-gray-700 ring-gray-300 hover:bg-gray-50'}`}>
               Todos
             </Link>

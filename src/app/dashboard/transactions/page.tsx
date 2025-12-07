@@ -35,11 +35,11 @@ export default async function TransactionsPage() {
   const expenseTotal = transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center gap-3">
         <Receipt className="h-8 w-8 text-blue-600" />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Transações</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Transações</h1>
           <p className="text-gray-600">Entradas e saídas financeiras</p>
         </div>
       </div>
@@ -73,10 +73,10 @@ export default async function TransactionsPage() {
           <CardTitle className="flex items-center gap-2">Lista de Transações</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-3 mb-4">
-            <Input placeholder="Buscar descrição ou categoria" className="max-w-sm" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
+            <Input placeholder="Buscar descrição ou categoria" className="max-w-full sm:max-w-sm" />
             <Link href="/dashboard/quick-entry" prefetch={false}>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" /> Nova Transação
               </Button>
             </Link>

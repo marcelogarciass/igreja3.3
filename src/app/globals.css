@@ -46,3 +46,13 @@
   --input: 217.2 32.6% 17.5%;
   --ring: 224.3 76.3% 94.1%;
 }
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

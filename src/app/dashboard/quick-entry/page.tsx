@@ -60,11 +60,11 @@ export default async function QuickEntryPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center gap-3">
         <Rocket className="h-8 w-8 text-blue-600" />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Lançamento Rápido</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Lançamento Rápido</h1>
           <p className="text-gray-600">Adicione uma transação de forma simples</p>
         </div>
       </div>
