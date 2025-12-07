@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input'
 import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
 import { Users, UserPlus } from 'lucide-react'
 import { redirect } from 'next/navigation'
+import { MemberForm } from '@/components/members/member-form'
+import { Member } from '@/lib/types'
 
 async function getMembers(churchId: string): Promise<Member[]> {
   const supabase = await createServerSupabaseClient()
@@ -21,76 +23,17 @@ async function getMembers(churchId: string): Promise<Member[]> {
   return (data || []) as Member[]
 }
 
-export async function createMember(formData: FormData) {
-  'use server'
-  const userData = await getUserWithChurch()
-  if (!userData) {
-    redirect('/login')
-  }
-
-  const name = (formData.get('name') as string) || ''
-  const birth_date = (formData.get('birth_date') as string) || ''
-  const position = (formData.get('position') as string) || 'Membro'
-  const entry_date = (formData.get('entry_date') as string) || new Date().toISOString().slice(0,10)
-  const status = (formData.get('status') as string) || 'active'
-  const phone = (formData.get('phone') as string) || ''
-  const email = (formData.get('email') as string) || ''
-
-  try {
-    const supabase = await createServerSupabaseClient()
-
-    // Checa duplicidade por e-mail (se informado) na mesma igreja
-    if (email) {
-      const { data: existingMembers, error: checkError } = await supabase
-        .from('members')
-        .select('id')
-        .eq('church_id', userData.church_id)
-        .eq('email', email)
-        .limit(1)
-
-      if (checkError) {
-        console.error('Erro ao verificar duplicidade de membro:', checkError)
-        redirect('/dashboard/members?error=db_check')
-      }
-
-      if (existingMembers && existingMembers.length > 0) {
-        redirect('/dashboard/members?error=duplicate')
-      }
-    }
-
-    const { error } = await supabase.from('members').insert({
-      church_id: userData.church_id,
-      name,
-      birth_date,
-      position,
-      entry_date,
-      status,
-      phone,
-      email,
-    })
-
-    if (error) {
-      console.error('Erro ao adicionar membro:', error)
-      redirect('/dashboard/members?error=db')
-    }
-
-    redirect('/dashboard/members?saved=1')
-  } catch (e) {
-    console.error('Erro geral na criação de membro:', e)
-    redirect('/dashboard/members?error=server')
-  }
-}
-
-export default async function MembersPage({ searchParams }: { searchParams?: { [key: string]: string } }) {
+export default async function MembersPage({ searchParams }: { searchParams?: Promise<{ [key: string]: string }> }) {
   const userData = await getUserWithChurch()
 
   if (!userData) {
     redirect('/login')
   }
 
+  const resolvedParams = await searchParams
   const members = await getMembers(userData.church_id)
-  const saved = searchParams?.saved
-  const errorCode = searchParams?.error
+  const saved = resolvedParams?.saved
+  const errorCode = resolvedParams?.error
 
   const errorMessages: Record<string, string> = {
     duplicate: 'Este e-mail já está cadastrado como membro da sua igreja.',
@@ -127,44 +70,7 @@ export default async function MembersPage({ searchParams }: { searchParams?: { [
           <CardTitle className="flex items-center gap-2">Novo Membro</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createMember} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nome</label>
-              <Input name="name" placeholder="Nome completo" required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">E-mail</label>
-              <Input name="email" type="email" placeholder="email@exemplo.com" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Telefone</label>
-              <Input name="phone" placeholder="(11) 99999-9999" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nascimento</label>
-              <Input name="birth_date" type="date" required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Cargo/Função</label>
-              <Input name="position" placeholder="Ex.: Diácono, Tesoureira" required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Entrada</label>
-              <Input name="entry_date" type="date" required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <select name="status" className="border rounded-md p-2">
-                <option value="active">Ativo</option>
-                <option value="inactive">Inativo</option>
-              </select>
-            </div>
-            <div className="md:col-span-2">
-              <Button type="submit">
-                <UserPlus className="h-4 w-4 mr-2" /> Adicionar Membro
-              </Button>
-            </div>
-          </form>
+          <MemberForm />
         </CardContent>
       </Card>
 
@@ -211,11 +117,4 @@ export default async function MembersPage({ searchParams }: { searchParams?: { [
       </Card>
     </div>
   )
-}
-type Member = {
-  id: string
-  name: string
-  email: string | null
-  status: 'active' | 'inactive'
-  entry_date: string
 }
