@@ -1,21 +1,27 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { createMember } from '@/app/dashboard/members/actions'
+import { createMember, updateMember } from '@/app/dashboard/members/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { UserPlus, Plus, Trash2 } from 'lucide-react'
+import { UserPlus, Plus, Trash2, Save } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { Member } from '@/lib/types'
 
 const initialState = {
   message: '',
   success: false,
 }
 
-export function MemberForm() {
-  const [state, formAction, isPending] = useActionState(createMember, initialState)
-  const [childrenList, setChildrenList] = useState<string[]>([])
+interface MemberFormProps {
+  initialData?: Member | null
+}
+
+export function MemberForm({ initialData }: MemberFormProps) {
+  const action = initialData ? updateMember : createMember
+  const [state, formAction, isPending] = useActionState(action, initialState)
+  const [childrenList, setChildrenList] = useState<string[]>(initialData?.children_names || [])
 
   const addChild = () => {
     setChildrenList([...childrenList, ''])
@@ -36,6 +42,8 @@ export function MemberForm() {
   return (
     <form action={formAction}>
       <input type="hidden" name="children_names" value={JSON.stringify(childrenList)} />
+      {initialData?.id && <input type="hidden" name="id" value={initialData.id} />}
+      {initialData?.family_id && <input type="hidden" name="family_id" value={initialData.family_id} />}
       
       {state.message && !state.success && (
          <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-900 mb-4">
@@ -58,31 +66,31 @@ export function MemberForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Nome Completo</label>
-                    <Input name="name" placeholder="Nome completo" required />
+                    <Input name="name" placeholder="Nome completo" required defaultValue={initialData?.name} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">CPF</label>
-                    <Input name="cpf" placeholder="000.000.000-00" />
+                    <Input name="cpf" placeholder="000.000.000-00" defaultValue={initialData?.cpf || ''} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Data de Nascimento</label>
-                    <Input name="birth_date" type="date" required />
+                    <Input name="birth_date" type="date" required defaultValue={initialData?.birth_date} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Profissão</label>
-                    <Input name="profession" placeholder="Ex.: Engenheiro" />
+                    <Input name="profession" placeholder="Ex.: Engenheiro" defaultValue={initialData?.profession || ''} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Telefone</label>
-                    <Input name="phone" placeholder="(11) 99999-9999" />
+                    <Input name="phone" placeholder="(11) 99999-9999" defaultValue={initialData?.phone || ''} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">E-mail</label>
-                    <Input name="email" type="email" placeholder="email@exemplo.com" />
+                    <Input name="email" type="email" placeholder="email@exemplo.com" defaultValue={initialData?.email || ''} />
                   </div>
                    <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium">Foto (URL)</label>
-                    <Input name="photo_url" placeholder="https://..." />
+                    <Input name="photo_url" placeholder="https://..." defaultValue={initialData?.photo_url || ''} />
                   </div>
                 </div>
               </CardContent>
@@ -95,23 +103,23 @@ export function MemberForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium">Rua</label>
-                    <Input name="address" placeholder="Rua das Flores, 123" />
+                    <Input name="address" placeholder="Rua das Flores, 123" defaultValue={initialData?.address || ''} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Bairro</label>
-                    <Input name="neighborhood" placeholder="Centro" />
+                    <Input name="neighborhood" placeholder="Centro" defaultValue={initialData?.neighborhood || ''} />
                   </div>
                    <div className="space-y-2">
                     <label className="text-sm font-medium">CEP</label>
-                    <Input name="zip_code" placeholder="00000-000" />
+                    <Input name="zip_code" placeholder="00000-000" defaultValue={initialData?.zip_code || ''} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Cidade</label>
-                    <Input name="city" placeholder="São Paulo" />
+                    <Input name="city" placeholder="São Paulo" defaultValue={initialData?.city || ''} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Estado</label>
-                    <Input name="state" placeholder="SP" maxLength={2} />
+                    <Input name="state" placeholder="SP" maxLength={2} defaultValue={initialData?.state || ''} />
                   </div>
                 </div>
               </CardContent>
@@ -124,22 +132,26 @@ export function MemberForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    <div className="space-y-2">
                     <label className="text-sm font-medium">Cargo/Função</label>
-                    <Input name="position" placeholder="Ex.: Diácono, Membro" required defaultValue="Membro" />
+                    <Input name="position" placeholder="Ex.: Diácono, Membro" required defaultValue={initialData?.position || 'Membro'} />
                   </div>
                    <div className="space-y-2">
                     <label className="text-sm font-medium">Status</label>
-                    <select name="status" className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm">
+                    <select 
+                      name="status" 
+                      className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                      defaultValue={initialData?.status || 'active'}
+                    >
                       <option value="active">Ativo</option>
                       <option value="inactive">Inativo</option>
                     </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Data de Entrada</label>
-                    <Input name="entry_date" type="date" required />
+                    <Input name="entry_date" type="date" required defaultValue={initialData?.entry_date} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Data de Batismo</label>
-                    <Input name="baptism_date" type="date" />
+                    <Input name="baptism_date" type="date" defaultValue={initialData?.baptism_date || ''} />
                   </div>
                 </div>
               </CardContent>
@@ -151,7 +163,7 @@ export function MemberForm() {
               <CardContent className="pt-6 space-y-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Cônjuge</label>
-                  <Input name="spouse_name" placeholder="Nome do cônjuge" />
+                  <Input name="spouse_name" placeholder="Nome do cônjuge" defaultValue={initialData?.spouse_name || ''} />
                 </div>
 
                 <div className="space-y-2">
@@ -190,7 +202,8 @@ export function MemberForm() {
           <Button type="submit" disabled={isPending}>
             {isPending ? 'Salvando...' : (
               <>
-                <UserPlus className="h-4 w-4 mr-2" /> Adicionar Membro
+                {initialData ? <Save className="h-4 w-4 mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+                {initialData ? 'Atualizar Membro' : 'Adicionar Membro'}
               </>
             )}
           </Button>

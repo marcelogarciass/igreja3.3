@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
-import { Users, Cake, Filter } from 'lucide-react'
+import { Users, Cake, Filter, Edit } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { MemberForm } from '@/components/members/member-form'
 import { Member } from '@/lib/types'
@@ -24,6 +24,21 @@ async function getMembers(churchId: string): Promise<Member[]> {
   return (data || []) as Member[]
 }
 
+async function getMemberById(id: string, churchId: string): Promise<Member | null> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('id', id)
+    .eq('church_id', churchId)
+    .single()
+  
+  if (error) {
+    return null
+  }
+  return data as Member
+}
+
 export default async function MembersPage({ searchParams }: { searchParams?: Promise<{ [key: string]: string }> }) {
   const userData = await getUserWithChurch()
 
@@ -34,8 +49,15 @@ export default async function MembersPage({ searchParams }: { searchParams?: Pro
   const resolvedParams = await searchParams
   const members = await getMembers(userData.church_id)
   const saved = resolvedParams?.saved
+  const updated = resolvedParams?.updated
   const errorCode = resolvedParams?.error
   const filterBirthdays = resolvedParams?.filter === 'birthdays'
+  const editId = resolvedParams?.editId
+
+  let memberToEdit: Member | null = null
+  if (editId) {
+    memberToEdit = await getMemberById(editId, userData.church_id)
+  }
 
   const errorMessages: Record<string, string> = {
     duplicate: 'Este e-mail já está cadastrado como membro da sua igreja.',
@@ -74,19 +96,32 @@ export default async function MembersPage({ searchParams }: { searchParams?: Pro
         </div>
       )}
 
+      {updated && (
+        <div className="rounded-md bg-blue-50 border border-blue-200 p-3 text-sm text-blue-900">
+          Membro atualizado com sucesso.
+        </div>
+      )}
+
       {errorCode && (
         <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-900">
           {errorMessages[errorCode] || 'Ocorreu um erro ao criar o membro.'}
         </div>
       )}
 
-      {/* Novo Membro */}
-      <Card>
+      {/* Novo/Editar Membro */}
+      <Card id="form-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">Novo Membro</CardTitle>
+          <CardTitle className="flex items-center justify-between gap-2">
+            <span>{memberToEdit ? 'Editar Membro' : 'Novo Membro'}</span>
+            {memberToEdit && (
+              <Link href="/dashboard/members">
+                <Button variant="ghost" size="sm">Cancelar Edição</Button>
+              </Link>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <MemberForm />
+          <MemberForm initialData={memberToEdit} />
         </CardContent>
       </Card>
 
@@ -115,12 +150,13 @@ export default async function MembersPage({ searchParams }: { searchParams?: Pro
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nascimento</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Entrada</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {displayedMembers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                       Nenhum membro encontrado.
                     </td>
                   </tr>
@@ -138,6 +174,13 @@ export default async function MembersPage({ searchParams }: { searchParams?: Pro
                         }>{m.status === 'active' ? 'Ativo' : 'Inativo'}</span>
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap">{new Date(m.entry_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-right">
+                        <Link href={`/dashboard/members?editId=${m.id}#form-card`}>
+                          <Button variant="ghost" size="icon">
+                            <Edit className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        </Link>
+                      </td>
                     </tr>
                   ))
                 )}
