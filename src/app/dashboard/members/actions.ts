@@ -159,6 +159,12 @@ export async function updateMember(prevState: any, formData: FormData) {
     return { message: 'ID do membro não fornecido', success: false }
   }
 
+  console.log('Update Member Request:', {
+    id,
+    formData: Object.fromEntries(formData.entries())
+  })
+
+
   // Basic Fields
   const name = (formData.get('name') as string) || ''
   const email = (formData.get('email') as string) || ''
@@ -298,7 +304,8 @@ export async function updateMember(prevState: any, formData: FormData) {
 
     if (error) {
       console.error('Erro ao atualizar membro:', error)
-      return { message: 'Erro ao salvar membro no banco de dados', success: false }
+      console.error('Detalhes do erro:', JSON.stringify(error, null, 2))
+      return { message: `Erro ao salvar membro no banco de dados: ${error.message}`, success: false }
     }
 
   } catch (e) {
