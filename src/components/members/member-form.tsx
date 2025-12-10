@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UserPlus, Plus, Trash2, Save } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Member } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 const initialState = {
   message: '',
@@ -23,6 +24,7 @@ export function MemberForm({ initialData }: MemberFormProps) {
   const [state, formAction, isPending] = useActionState(action, initialState)
   const [childrenList, setChildrenList] = useState<string[]>(initialData?.children_names || [])
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialData?.photo_url || null)
+  const [activeTab, setActiveTab] = useState('personal')
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -60,7 +62,7 @@ export function MemberForm({ initialData }: MemberFormProps) {
         </div>
       )}
 
-      <Tabs defaultValue="personal" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="personal">Pessoal</TabsTrigger>
           <TabsTrigger value="address">Endereço</TabsTrigger>
@@ -69,7 +71,7 @@ export function MemberForm({ initialData }: MemberFormProps) {
         </TabsList>
         
         <div className="mt-4">
-          <TabsContent value="personal">
+          <div className={cn("mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", activeTab === "personal" ? "block" : "hidden")}>
             <Card>
               <CardContent className="pt-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -118,9 +120,9 @@ export function MemberForm({ initialData }: MemberFormProps) {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="address">
+          <div className={cn("mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", activeTab === "address" ? "block" : "hidden")}>
             <Card>
               <CardContent className="pt-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -147,9 +149,9 @@ export function MemberForm({ initialData }: MemberFormProps) {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="church">
+          <div className={cn("mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", activeTab === "church" ? "block" : "hidden")}>
              <Card>
               <CardContent className="pt-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -179,9 +181,9 @@ export function MemberForm({ initialData }: MemberFormProps) {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="family">
+          <div className={cn("mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", activeTab === "family" ? "block" : "hidden")}>
             <Card>
               <CardContent className="pt-6 space-y-6">
                 <div className="space-y-2">
@@ -218,7 +220,7 @@ export function MemberForm({ initialData }: MemberFormProps) {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
         </div>
 
         <div className="mt-6 flex justify-end">
