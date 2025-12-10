@@ -70,13 +70,10 @@ export async function createMember(prevState: any, formData: FormData) {
   const new_family_name = (formData.get('new_family_name') as string) || ''
   let family_id = (formData.get('family_id') as string) || null
 
-  console.log('Create Member Request:', {
-    name,
-    email,
-    family_id_form: formData.get('family_id'),
-    new_family_name: formData.get('new_family_name'),
-    children_json
-  })
+  // Validate required fields
+  if (!name || !birth_date || !position || !entry_date) {
+    return { message: 'Preencha todos os campos obrigatórios (Nome, Data de Nascimento, Cargo, Data de Entrada)', success: false }
+  }
 
   try {
     // 1. Create Family if needed
@@ -168,12 +165,6 @@ export async function updateMember(prevState: any, formData: FormData) {
     return { message: 'ID do membro não fornecido', success: false }
   }
 
-  console.log('Update Member Request:', {
-    id,
-    formData: Object.fromEntries(formData.entries())
-  })
-
-
   // Basic Fields
   const name = (formData.get('name') as string) || ''
   const email = (formData.get('email') as string) || ''
@@ -234,6 +225,11 @@ export async function updateMember(prevState: any, formData: FormData) {
 
   const new_family_name = (formData.get('new_family_name') as string) || ''
   let family_id = (formData.get('family_id') as string) || null
+
+  // Validate required fields
+  if (!name || !birth_date || !position || !entry_date) {
+    return { message: 'Preencha todos os campos obrigatórios (Nome, Data de Nascimento, Cargo, Data de Entrada)', success: false }
+  }
 
   try {
     // 1. Create Family if needed
