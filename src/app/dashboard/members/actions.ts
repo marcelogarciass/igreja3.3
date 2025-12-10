@@ -70,6 +70,14 @@ export async function createMember(prevState: any, formData: FormData) {
   const new_family_name = (formData.get('new_family_name') as string) || ''
   let family_id = (formData.get('family_id') as string) || null
 
+  console.log('Create Member Request:', {
+    name,
+    email,
+    family_id_form: formData.get('family_id'),
+    new_family_name: formData.get('new_family_name'),
+    children_json
+  })
+
   try {
     // 1. Create Family if needed
     if (new_family_name) {
@@ -137,7 +145,8 @@ export async function createMember(prevState: any, formData: FormData) {
 
     if (error) {
       console.error('Erro ao adicionar membro:', error)
-      return { message: 'Erro ao salvar membro no banco de dados', success: false }
+      console.error('Detalhes do erro:', JSON.stringify(error, null, 2))
+      return { message: `Erro ao salvar membro no banco de dados: ${error.message}`, success: false }
     }
 
   } catch (e) {
