@@ -12,7 +12,7 @@ async function getTransactions(churchId: string): Promise<Transaction[]> {
   const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('transactions')
-    .select('*')
+    .select('*, members(name)')
     .eq('church_id', churchId)
     .order('date', { ascending: false })
 
@@ -88,6 +88,7 @@ export default async function TransactionsPage() {
                 <tr>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Membro</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
@@ -98,6 +99,7 @@ export default async function TransactionsPage() {
                   <tr key={t.id}>
                     <td className="px-4 py-2 whitespace-nowrap">{new Date(t.date).toLocaleDateString('pt-BR')}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{t.description}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">{t.members?.name || '-'}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{t.category}</td>
                     <td className="px-4 py-2 whitespace-nowrap">
                       <span className={t.type === 'income' ? 'text-green-700' : 'text-red-700'}>
@@ -122,4 +124,5 @@ type Transaction = {
   category: string
   type: 'income' | 'expense'
   amount: number
+  members?: { name: string } | null
 }

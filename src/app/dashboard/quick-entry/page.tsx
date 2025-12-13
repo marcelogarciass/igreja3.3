@@ -19,6 +19,7 @@ export async function createQuickTransaction(formData: FormData) {
   const amount = Number(formData.get('amount') || 0)
   const date = (formData.get('date') as string) || new Date().toISOString().slice(0, 10)
   const description = (formData.get('description') as string) || ''
+  const member_id = (formData.get('member_id') as string) || null
 
   // Validate category
   const isValidCategory = TRANSACTION_CATEGORIES.includes(category as any)
@@ -46,7 +47,7 @@ export async function createQuickTransaction(formData: FormData) {
       amount,
       date,
       description,
-      member_id: null,
+      member_id: member_id || null
     })
 
     if (error) {
@@ -74,6 +75,14 @@ export default async function QuickEntryPage() {
   if (!userData) {
     redirect('/login')
   }
+
+  const supabase = await createServerSupabaseClient()
+  const { data: members } = await supabase
+    .from('members')
+    .select('id, name')
+    .eq('church_id', userData.church_id)
+    .eq('status', 'active')
+    .order('name')
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -107,12 +116,25 @@ export default async function QuickEntryPage() {
               <select 
                 name="category" 
                 className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                required
-                defaultValue=""
               >
-                <option value="" disabled>Selecione uma categoria</option>
+                <option value="" disabled selected>Selecione uma categoria</option>
                 {TRANSACTION_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Membro (Opcional)</label>
+              <select 
+                name="member_id" 
+                className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Selecione um membro...</option>
+                {members?.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name}
+                  </option>
                 ))}
               </select>
             </div>
