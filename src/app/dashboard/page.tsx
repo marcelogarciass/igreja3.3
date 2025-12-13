@@ -11,6 +11,8 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { getUserWithChurch, createServerSupabaseClient } from '@/lib/auth'
+import { IncomeBreakdown } from '@/components/dashboard/income-breakdown'
+import { Transaction } from '@/components/transactions/transaction-table'
 
 async function getDashboardData(churchId: string) {
   const supabase = await createServerSupabaseClient()
@@ -135,7 +137,23 @@ async function getDashboardData(churchId: string) {
       const membersMap: Record<string, string> = Object.fromEntries((members || []).map((m: { id: string; name: string }) => [m.id, m.name]))
       recentTransactionsWithMember = recentTransactions.map((t) => ({
         ...t,
-        member_name: t.member_id ? membersMap[t.member_id] ?? null : null,
+        members: t.member_id ? { name: membersMap[t.member_id] ?? '' } : null,
+      }))
+    }
+
+    // Prepare current month transactions with member names for breakdown
+    let currentMonthTransactionsWithMember = currentMonthTransactions
+    const currentMemberIds = currentMonthTransactions.filter((t) => !!t.member_id).map((t) => t.member_id as string)
+    if (currentMemberIds.length > 0) {
+      const { data: members } = await supabase
+        .from('members')
+        .select('id, name')
+        .eq('church_id', churchId)
+        .in('id', currentMemberIds)
+      const membersMap: Record<string, string> = Object.fromEntries((members || []).map((m: { id: string; name: string }) => [m.id, m.name]))
+      currentMonthTransactionsWithMember = currentMonthTransactions.map((t) => ({
+        ...t,
+        members: t.member_id ? { name: membersMap[t.member_id] ?? '' } : null,
       }))
     }
 
@@ -149,6 +167,7 @@ async function getDashboardData(churchId: string) {
       membersCount: membersCount || 0,
       chartData,
       recentTransactions: recentTransactionsWithMember,
+      currentMonthTransactions: currentMonthTransactionsWithMember,
       yearBalance,
     }
   } catch (err) {
@@ -163,6 +182,7 @@ async function getDashboardData(churchId: string) {
       membersCount: 0,
       chartData: [],
       recentTransactions: [],
+      currentMonthTransactions: [],
       yearBalance: 0,
     }
   }
@@ -285,6 +305,9 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
       </div>
       <div className="text-sm text-gray-600">Acumulado no ano: {formatCurrency(dashboardData.yearBalance)}</div>
 
+      {/* Income Breakdown */}
+      <IncomeBreakdown transactions={dashboardData.currentMonthTransactions} />
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <FinancialChart data={dashboardData.chartData} type="line" />
@@ -342,7 +365,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
                       <td className="px-4 py-2 whitespace-nowrap">{new Date(t.date).toLocaleDateString('pt-BR')}</td>
                       <td className="px-4 py-2 whitespace-nowrap">{t.description}</td>
                       <td className="px-4 py-2 whitespace-nowrap">{t.category}</td>
-                      <td className="px-4 py-2 whitespace-nowrap">{t.member_name ? <Link href="/dashboard/members" prefetch={false} className="text-primary hover:underline">{t.member_name}</Link> : '-'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">{t.members?.name ? <Link href="/dashboard/members" prefetch={false} className="text-primary hover:underline">{t.members.name}</Link> : '-'}</td>
                       <td className="px-4 py-2 whitespace-nowrap">
                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${t.type === 'income' ? 'bg-green-50 text-green-700 ring-green-600/20' : 'bg-red-50 text-red-700 ring-red-600/20'}`}>
                           {t.type === 'income' ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
@@ -368,15 +391,4 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
       </Card>
     </div>
   )
-}
-type Transaction = {
-  id?: string
-  date: string
-  created_at?: string
-  description: string
-  category: string
-  type: 'income' | 'expense'
-  amount: number
-  member_id?: string | null
-  member_name?: string | null
 }

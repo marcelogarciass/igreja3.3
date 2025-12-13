@@ -14,6 +14,7 @@ import {
 export type Transaction = {
   id: string
   date: string
+  created_at?: string
   description: string
   category: string
   type: 'income' | 'expense'
