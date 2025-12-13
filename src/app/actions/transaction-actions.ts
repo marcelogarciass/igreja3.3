@@ -84,3 +84,50 @@ export async function deleteTransaction(id: string) {
 
   return { success: true, message: 'Transação excluída com sucesso!' }
 }
+
+export async function createTransaction(data: {
+  type: string
+  category: string
+  amount: number
+  date: string
+  description: string
+  member_id: string | null
+}) {
+  const userData = await getUserWithChurch()
+  if (!userData) {
+    return { success: false, message: 'Usuário não autenticado' }
+  }
+
+  // Validation
+  if (data.amount === 0) {
+    return { success: false, message: 'O valor não pode ser zero.' }
+  }
+  if (!data.date) {
+    return { success: false, message: 'Data inválida.' }
+  }
+  if (!TRANSACTION_CATEGORIES.includes(data.category as any)) {
+    return { success: false, message: 'Categoria inválida.' }
+  }
+
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase.from('transactions').insert({
+    church_id: userData.church_id,
+    type: data.type,
+    category: data.category,
+    amount: data.amount,
+    date: data.date,
+    description: data.description,
+    member_id: data.member_id || null
+  })
+
+  if (error) {
+    console.error('Erro ao criar transação:', error)
+    return { success: false, message: 'Erro ao criar transação.' }
+  }
+
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/transactions')
+
+  return { success: true, message: 'Transação criada com sucesso!' }
+}
