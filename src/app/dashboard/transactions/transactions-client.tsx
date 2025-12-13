@@ -1,27 +1,46 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ArrowDownCircle, ArrowUpCircle, Printer, Search, X } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, Printer, Search, X, Plus } from 'lucide-react'
 import { useReactToPrint } from 'react-to-print'
 import { Transaction, TransactionTable } from '@/components/transactions/transaction-table'
 import { PrintableReport } from '@/components/transactions/printable-report'
+import { EditTransactionDialog } from '@/components/transactions/edit-transaction-dialog'
+import { DeleteTransactionDialog } from '@/components/transactions/delete-transaction-dialog'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface TransactionsClientProps {
   initialTransactions: Transaction[]
+  members: { id: string; name: string }[]
 }
 
-export function TransactionsClient({ initialTransactions }: TransactionsClientProps) {
+export function TransactionsClient({ initialTransactions, members }: TransactionsClientProps) {
+  const router = useRouter()
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions)
+  
+  // Update state if props change (revalidation from server)
+  useEffect(() => {
+    setTransactions(initialTransactions)
+  }, [initialTransactions])
+
   const [filterState, setFilterState] = useState({
     type: 'all' as 'all' | 'income' | 'expense',
     startDate: '',
     endDate: '',
     search: ''
   })
+
+  // Dialog States
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+  
+  // Feedback State
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const componentRef = useRef<HTMLDivElement>(null)
 
@@ -31,7 +50,7 @@ export function TransactionsClient({ initialTransactions }: TransactionsClientPr
   })
 
   const filteredTransactions = useMemo(() => {
-    return initialTransactions.filter(t => {
+    return transactions.filter(t => {
       // Type Filter
       if (filterState.type !== 'all' && t.type !== filterState.type) return false
 
@@ -54,7 +73,7 @@ export function TransactionsClient({ initialTransactions }: TransactionsClientPr
 
       return true
     })
-  }, [initialTransactions, filterState])
+  }, [transactions, filterState])
 
   const totals = useMemo(() => {
     const income = filteredTransactions
@@ -92,8 +111,49 @@ export function TransactionsClient({ initialTransactions }: TransactionsClientPr
     return 'Extrato Geral'
   }
 
+  // Handlers for Actions
+  const onEdit = (transaction: Transaction) => {
+    setSelectedTransaction(transaction)
+    setIsEditOpen(true)
+  }
+
+  const onDelete = (transaction: Transaction) => {
+    setSelectedTransaction(transaction)
+    setIsDeleteOpen(true)
+  }
+
+  const onEditSuccess = (updatedTransaction: Transaction) => {
+    // Optimistic Update
+    setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t))
+    setSuccessMessage('Transação atualizada com sucesso!')
+    // Clear success message after 3 seconds
+    setTimeout(() => setSuccessMessage(null), 3000)
+    // Ensure server sync
+    router.refresh()
+  }
+
+  const onDeleteSuccess = (deletedId: string) => {
+    // Optimistic Update
+    setTransactions(prev => prev.filter(t => t.id !== deletedId))
+    setSuccessMessage('Transação excluída com sucesso!')
+    // Clear success message after 3 seconds
+    setTimeout(() => setSuccessMessage(null), 3000)
+    // Ensure server sync
+    router.refresh()
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white px-4 py-3 rounded shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-5">
+          <span>✅ {successMessage}</span>
+          <button onClick={() => setSuccessMessage(null)} className="ml-2 hover:bg-green-700 rounded p-1">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Stats Cards / Filters */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card 
@@ -190,11 +250,15 @@ export function TransactionsClient({ initialTransactions }: TransactionsClientPr
           </div>
 
           {/* Table */}
-          <TransactionTable transactions={filteredTransactions} />
+          <TransactionTable 
+            transactions={filteredTransactions} 
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         </CardContent>
       </Card>
 
-      {/* Hidden Print Component - using height 0 to avoid display:none issues with react-to-print */}
+      {/* Hidden Print Component */}
       <div style={{ height: 0, overflow: 'hidden' }}>
         <PrintableReport 
           ref={componentRef} 
@@ -203,6 +267,22 @@ export function TransactionsClient({ initialTransactions }: TransactionsClientPr
           totals={totals}
         />
       </div>
+
+      {/* Modals */}
+      <EditTransactionDialog 
+        transaction={selectedTransaction}
+        isOpen={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        onSuccess={onEditSuccess}
+        members={members}
+      />
+
+      <DeleteTransactionDialog 
+        transaction={selectedTransaction}
+        isOpen={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        onSuccess={onDeleteSuccess}
+      />
     </div>
   )
 }

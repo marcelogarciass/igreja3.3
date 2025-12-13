@@ -20,13 +20,33 @@ async function getTransactions(churchId: string): Promise<Transaction[]> {
   return (data || []) as Transaction[]
 }
 
+async function getMembers(churchId: string) {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from('members')
+    .select('id, name')
+    .eq('church_id', churchId)
+    .eq('status', 'active')
+    .order('name')
+
+  if (error) {
+    console.error('Erro ao buscar membros:', error)
+    return []
+  }
+
+  return data || []
+}
+
 export default async function TransactionsPage() {
   const userData = await getUserWithChurch()
   if (!userData) {
     redirect('/login')
   }
 
-  const transactions = await getTransactions(userData.church_id)
+  const [transactions, members] = await Promise.all([
+    getTransactions(userData.church_id),
+    getMembers(userData.church_id)
+  ])
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -38,7 +58,7 @@ export default async function TransactionsPage() {
         </div>
       </div>
 
-      <TransactionsClient initialTransactions={transactions} />
+      <TransactionsClient initialTransactions={transactions} members={members} />
     </div>
   )
 }
